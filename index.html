@@ -322,6 +322,23 @@
   const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
   const player = new Audio();
   player.preload = "auto";
+
+  // Teshis modu: adresin sonuna ?debug=1 -> ekranin altinda ses olaylari
+  const DEBUG = typeof location !== "undefined" && /[?&]debug=1/.test(location.search);
+  const t00 = Date.now();
+  function dbg(m) {
+    if (!DEBUG) return;
+    let box = document.getElementById("dbg");
+    if (!box) { box = document.createElement("pre"); box.id = "dbg"; box.style.cssText = "position:fixed;left:0;right:0;bottom:0;max-height:38vh;overflow:auto;margin:0;padding:6px 8px;background:rgba(0,0,0,.85);color:#7fe0ae;font:11px/1.3 monospace;z-index:9;white-space:pre-wrap"; document.body.appendChild(box); }
+    box.textContent += ((Date.now() - t00) / 1000).toFixed(1) + "s " + m + String.fromCharCode(10);
+    box.scrollTop = box.scrollHeight;
+  }
+  if (DEBUG) {
+    const short = () => (player.src || "").split("/").pop().slice(-14);
+    ["play", "playing", "pause", "ended", "error", "stalled", "waiting", "emptied", "abort"].forEach(ev =>
+      player.addEventListener(ev, () => dbg(ev + " " + short() + " t=" + player.currentTime.toFixed(1) + " d=" + (isFinite(player.duration) ? player.duration.toFixed(1) : "?"))));
+    document.addEventListener("visibilitychange", () => dbg("visibility " + document.visibilityState));
+  }
   // Dosya adi metinden turetilir (djb2): soru eklenip cikarilsa da ses dogru cumleye bagli kalir
   function key(t) { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(16); }
   const blobs = {};  // onceden indirilen sesler: soru aninda internet beklenmez
@@ -341,27 +358,35 @@
     if (cancelPrev) cancelPrev();
     const my = ++playId;  // bu sesin kimligi: eski bir sesin zamanlayicisi yenisine dokunamaz
     return new Promise(resolve => {
-      let done = false, guard = null, lastT = -1, still = 0;
+      let done = false, guard = null, lastT = -1, still = 0, resumes = 0;
+      const resume = why => {
+        if (done || !mine() || player.ended || resumes >= 3) return;
+        resumes++; dbg("resume (" + why + ") #" + resumes);
+        player.play().catch(e => dbg("resume failed " + (e && e.name)));
+      };
       const mine = () => my === playId;
       const end = () => { done = true; clearTimeout(guard); $("avatar").classList.remove("talking"); };
       // Yeni ses baslarsa bu sessizce kapanir
       cancelPrev = () => { if (done) return; end(); resolve(); };
       const finish = ok => {
         if (done) return; end();
-        if (mine()) { player.onended = player.onerror = player.onplaying = null; cancelPrev = null; }
+        if (mine()) { player.onended = player.onerror = player.onplaying = player.onpause = null; cancelPrev = null; }
         if (ok || !mine()) resolve(); else sayTTS(text).then(resolve);
       };
       // Emniyet: ses ilerledigi surece beklenir; 3 sn hic ilerlemezse (telefon "bitti"yi yuttu) devam edilir
       const watch = () => {
         if (done || !mine()) return;
         if (player.ended) { finish(true); return; }
+        if (player.paused) resume("watch");
         if (player.currentTime > lastT) { lastT = player.currentTime; still = 0; } else if (++still >= 3) { finish(true); return; }
         guard = setTimeout(watch, 1000);
       };
       guard = setTimeout(() => finish(false), 6000);  // 6 sn icinde hic baslamazsa yedek sese gec
       player.onplaying = () => { if (!mine() || done) return; clearTimeout(guard); guard = setTimeout(watch, 1000); };
       player.onended = () => { if (mine()) finish(true); };
+      player.onpause = () => { if (mine() && !done && !player.ended) setTimeout(() => resume("pause"), 250); };
       player.onerror = () => { if (mine()) finish(false); };
+      dbg("say: " + text.slice(0, 32));
       player.src = src;
       $("avatar").classList.add("talking");
       player.play().catch(() => { if (mine()) finish(false); });
@@ -402,14 +427,16 @@
       }
       renderTranscript();
     };
+    if (DEBUG) { rec.onstart = () => dbg("rec start"); rec.onaudioend = () => dbg("rec audioend"); }
     rec.onerror = e => {
+      dbg("rec error " + e.error);
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         $("transcript").innerHTML = '<span class="muted">Mikrofon izni verilmedi. Yine de konuşabilirsiniz; sadece yazı görünmez.</span>';
         listening = false;
       }
     };
     // Chrome sessizlikte dinlemeyi kendisi kapatir: cevap bitmediyse yeniden ac
-    rec.onend = () => { if (listening && r0 === rec) { try { rec.start(); } catch (_) {} } };
+    rec.onend = () => { dbg("rec end"); if (listening && r0 === rec) { try { rec.start(); } catch (_) {} } };
     try { rec.start(); } catch (_) {}
   }
   function stopListening() {
