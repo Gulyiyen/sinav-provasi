@@ -211,7 +211,7 @@
   }
   if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
 
-  function say(text) {
+  function sayTTS(text) {
     return new Promise(resolve => {
       if (!synth) { resolve(); return; }
       synth.cancel();
@@ -227,6 +227,37 @@
       setTimeout(finish, 2500 + text.length * 90);
       synth.speak(u);
     });
+  }
+
+  // ---- Kayitli ses (Sonia): her cumle audio/<sira>.mp3; dosya yoksa tarayici sesine duser ----
+  const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course."]);
+  const player = new Audio();
+  player.preload = "auto";
+  function clip(text) { const i = CLIPS.indexOf(text); return i < 0 ? null : "audio/" + i + ".mp3"; }
+  function say(text) {
+    const src = clip(text);
+    if (!src) return sayTTS(text);
+    return new Promise(resolve => {
+      let done = false;
+      const finish = ok => {
+        if (done) return; done = true;
+        player.onended = player.onerror = null;
+        $("avatar").classList.remove("talking");
+        if (ok) resolve(); else sayTTS(text).then(resolve);
+      };
+      player.onended = () => finish(true);
+      player.onerror = () => finish(false);
+      player.src = src;
+      $("avatar").classList.add("talking");
+      player.play().catch(() => finish(false));
+    });
+  }
+  // Telefonlarda ses ancak dokunma aninda "acilabilir": ilk dokunusta oynaticiyi uyandir
+  function unlockAudio() {
+    const src = "audio/" + (CLIPS.length - 1) + ".mp3";
+    player.muted = true; player.src = src;
+    const reset = () => { if (player.src.endsWith(src)) player.pause(); player.muted = false; };
+    player.play().then(reset).catch(reset);
   }
 
   // ---- Konusma tanima ----
@@ -291,6 +322,7 @@
   }
 
   async function startCall() {
+    unlockAudio();
     // Mikrofon iznini bastan iste (tek seferde)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
@@ -321,7 +353,7 @@
   }
 
   function endCall() {
-    active = false; stopListening(); if (synth) synth.cancel();
+    active = false; stopListening(); if (synth) synth.cancel(); player.pause();
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
     $("result-meta").textContent = `${answers.length} soru cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
@@ -354,7 +386,9 @@
     stopListening();
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
     setStatus("Görevli tekrar ediyor…");
-    await say("Of course. " + questions[idx]);
+    await say("Of course.");
+    if (!active) return;
+    await say(questions[idx]);
     if (!active) return;
     setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
     $("btn-done").disabled = false; $("btn-repeat").disabled = false;
