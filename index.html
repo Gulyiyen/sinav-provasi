@@ -80,6 +80,8 @@
   .ans .q { font-weight: 600; }
   .ans .a { margin-top: 4px; }
   .ans .a.empty { color: var(--muted); font-style: italic; }
+  .sample-btn { margin-top: 8px; }
+  .sample { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(59,130,246,.08); border-radius: 8px; font-size: 16px; }
   .tip { color: #ffd58a; font-size: 15px; margin-top: 4px; }
   .ok { color: #7fe0ae; font-size: 15px; margin-top: 4px; }
 </style>
@@ -141,6 +143,7 @@
   <section class="screen" id="s-result">
     <h1>Prova bitti 👏</h1>
     <p class="muted" id="result-meta"></p>
+    <p class="muted" style="font-size:15px">Her sorunun altındaki <b>🔊 Örnek cevabı dinle</b> ile iyi bir cevabın nasıl kurulduğunu duyabilirsiniz. Kendi bilgilerinizle değiştirin, ezberlemeyin.</p>
     <div class="card" id="answers"></div>
 
     <div class="card">
@@ -184,9 +187,95 @@
     "Do you enjoy driving? Why, or why not?",
     "How has London changed since you first came here?",
     "What would you do if a passenger left something in your car?",
-    "What is the best thing about your job?"
+    "What is the best thing about your job?",
+    "What do you like about your neighbourhood?",
+    "What do you usually do on Sundays?",
+    "Can you tell me about your best friend?",
+    "What languages do you speak?",
+    "How did you learn English?",
+    "What do you find difficult about learning English?",
+    "What is the weather like in your home country?",
+    "What do you miss about your home country?",
+    "Who do you live with?",
+    "What sports do you like to watch or play?",
+    "What kind of music do you enjoy?",
+    "Do you like watching films? What kind of films?",
+    "Where did you go on your last holiday?",
+    "Where would you like to travel in the future, and why?",
+    "What is your favourite season, and why?",
+    "How do you keep fit and healthy?",
+    "What do you usually have for breakfast?",
+    "Do you prefer shopping online or in shops? Why?",
+    "How often do you use your mobile phone, and what for?",
+    "Can you describe a typical day for you?",
+    "How do you celebrate special occasions with your family?",
+    "What is the most important festival in your country?",
+    "What would you do if a passenger was rude to you?",
+    "How would you help a passenger who uses a wheelchair?",
+    "What do you do if you get lost while driving?",
+    "When is the busiest time on London's roads?",
+    "What would you do if you felt tired while driving?",
+    "Why is good customer service important for a driver?",
+    "What makes a journey comfortable for a passenger?",
+    "How do you stay calm in heavy traffic?"
   ];
-  const PICK = 5;
+  // Ornek cevaplar (B1: cevap + because + kucuk ornek). Ayri sesle (Ryan) okunur.
+  const SAMPLE = {
+    "Hello. Thank you for coming today. I'm going to ask you some questions about yourself. First, can you tell me your full name, please?": "My name is Mehmet Yilmaz. My first name is spelled M, E, H, M, E, T.",
+    "Thank you. And where are you from?": "I'm from Turkey, from a city called Izmir. It's on the west coast, and it's famous for its beautiful sea and good food.",
+    "How long have you lived in the UK?": "I have lived in the UK for about eight years. I came here in 2018, and at first I lived with my cousin in North London.",
+    "What do you like most about living in London?": "I like the variety most. There are people from all over the world, so you can try many different foods and meet interesting people every day.",
+    "What do you usually do in your free time?": "In my free time I usually spend time with my family. At the weekend we often go to the park, and sometimes I play football with my friends.",
+    "Can you tell me something about your family?": "I'm married and I have two children, a boy and a girl. My son is ten and my daughter is six. My parents still live in Turkey, so I call them every week.",
+    "What kind of work do you do at the moment?": "At the moment I work as a delivery driver. I deliver parcels around East London, so I already know many of the roads very well.",
+    "Why do you want to become a private hire driver?": "I want to become a private hire driver because I enjoy driving and meeting people. Also, I can choose my working hours, so I can spend more time with my children.",
+    "What do you think makes a good driver?": "I think a good driver is calm and patient. For example, a good driver doesn't get angry in traffic, and always follows the rules to keep passengers safe.",
+    "How do you usually travel around London?": "I usually travel by car because it's quicker for me. But when I go to central London, I take the Tube, because parking is very expensive there.",
+    "What is your favourite part of London, and why?": "My favourite part is Greenwich, because it has a lovely park and great views of the city. I often go there with my family on Sunday afternoons.",
+    "Do you prefer working in the day or at night? Why?": "I prefer working in the day, because the roads are safer and I can sleep well at night. However, the night can be quieter, so sometimes I work in the evening too.",
+    "What did you do last weekend?": "Last weekend I visited my brother in Enfield. We had a barbecue in his garden, and in the evening we watched a football match together.",
+    "What are your plans for next year?": "Next year I hope to get my private hire licence and start working as a driver. I also want to improve my English, so I'm going to take a course.",
+    "Can you describe the area where you live?": "I live in Edmonton, in North London. It's a busy area with lots of shops and restaurants, and there is a big park near my house where my children play.",
+    "What kind of food do you like? Do you enjoy cooking?": "I like Turkish food, especially kebabs and fresh vegetables. Yes, I enjoy cooking. At the weekend I often cook breakfast for my family.",
+    "How do you relax after a long day at work?": "After a long day I usually have a cup of tea and talk with my family. Sometimes I watch the news or go for a short walk to clear my head.",
+    "What was your first job?": "My first job was in a restaurant in Turkey. I was a waiter when I was eighteen. It was hard work, but I learned how to talk to customers politely.",
+    "Do you enjoy driving? Why, or why not?": "Yes, I really enjoy driving. I find it relaxing, and I like discovering new places. For example, I enjoy driving outside London at the weekend.",
+    "How has London changed since you first came here?": "London has changed a lot. There are more cycle lanes now, and the roads are busier. Also, many new buildings have appeared in the city.",
+    "What would you do if a passenger left something in your car?": "First, I would contact my operator and tell them about it. Then I would keep the item safe until the passenger could collect it. I would never keep it for myself.",
+    "What is the best thing about your job?": "The best thing about my job is meeting different people every day. For example, yesterday I talked to a man from Brazil, and he told me about his country.",
+    "What do you like about your neighbourhood?": "I like my neighbourhood because it's quiet and friendly. My neighbours are very kind, and there is a good school near my house for my children.",
+    "What do you usually do on Sundays?": "On Sundays I usually relax with my family. We have a big breakfast together, and in the afternoon we often visit friends or go shopping.",
+    "Can you tell me about your best friend?": "My best friend is called Ali. We met fifteen years ago at work. He is very funny and helpful, and he always helps me when I have a problem.",
+    "What languages do you speak?": "I speak Turkish, because it's my first language, and English. I also understand a little Kurdish, because some of my neighbours in Turkey spoke it.",
+    "How did you learn English?": "I learned some English at school, but I learned most of it here in London. I practise every day at work, and I also watch English programmes on TV.",
+    "What do you find difficult about learning English?": "I find listening difficult, especially when people speak very fast. Also, some words are hard to pronounce, so I practise them at home.",
+    "What is the weather like in your home country?": "In my home country, the summers are very hot and dry, sometimes over thirty-five degrees. The winters are mild, and it doesn't rain as much as in London.",
+    "What do you miss about your home country?": "I miss my family most, especially my mother. I also miss the sunny weather and the sea, because in London it's often cold and grey.",
+    "Who do you live with?": "I live with my wife and our two children. We have a small house with a garden, which is great for the kids in the summer.",
+    "What sports do you like to watch or play?": "I like football very much. I watch matches on TV every weekend, and I play with my friends on Saturday mornings in the local park.",
+    "What kind of music do you enjoy?": "I enjoy Turkish pop music and some English songs too. I often listen to music at home, because it helps me feel relaxed.",
+    "Do you like watching films? What kind of films?": "Yes, I like watching films, especially action films and comedies. Last month I watched a funny film with my family, and we all laughed a lot.",
+    "Where did you go on your last holiday?": "On my last holiday I went to Turkey to visit my family. We stayed for two weeks, and we spent a few days at the beach near Bodrum.",
+    "Where would you like to travel in the future, and why?": "I would like to travel to Scotland, because I've heard the countryside is beautiful. I want to drive there with my family and see the mountains.",
+    "What is your favourite season, and why?": "My favourite season is spring, because the weather gets warmer and the parks are full of flowers. Also, the days are longer, so I can do more after work.",
+    "How do you keep fit and healthy?": "I try to eat healthy food and walk every day. Because driving means sitting for a long time, I go for a walk during my breaks.",
+    "What do you usually have for breakfast?": "I usually have a Turkish breakfast with bread, cheese, olives and tomatoes. And of course, I always have a glass of black tea.",
+    "Do you prefer shopping online or in shops? Why?": "I prefer shopping online for most things, because it's quicker and easier. But for food and clothes, I like going to the shops, so I can see them first.",
+    "How often do you use your mobile phone, and what for?": "I use my phone every day, for many things. I use it to call my family, check the news and find directions. But I never hold my phone while I'm driving.",
+    "Can you describe a typical day for you?": "I usually wake up at seven and take my children to school. Then I start work at nine and finish at about six. In the evening I have dinner with my family.",
+    "How do you celebrate special occasions with your family?": "We usually celebrate with a big meal at home. For example, on my daughter's birthday we invited our friends, cooked lots of food and had a cake.",
+    "What is the most important festival in your country?": "In Turkey, one of the most important festivals is Eid, called Bayram. Families visit each other, children get sweets, and people wear new clothes.",
+    "What would you do if a passenger was rude to you?": "I would stay calm and polite, because arguing makes things worse. If the passenger became aggressive or I felt unsafe, I would stop in a safe place and contact my operator.",
+    "How would you help a passenger who uses a wheelchair?": "I would ask the passenger how they would like me to help, because everyone is different. Then I would help carefully and make sure they are comfortable and safe.",
+    "What do you do if you get lost while driving?": "If I get lost, I stay calm and find a safe place to stop. Then I check the map or my sat nav, and if I have a passenger, I explain the situation politely.",
+    "When is the busiest time on London's roads?": "The busiest times are usually the morning rush hour, from about seven to ten, and the evening, from about four to seven. Friday evenings are often very busy too.",
+    "What would you do if you felt tired while driving?": "If I felt tired, I would stop in a safe place and take a break, because tired driving is very dangerous. I would rest before I continued.",
+    "Why is good customer service important for a driver?": "Good customer service is important because happy passengers come back and give good ratings. For example, a friendly greeting and a clean car make a big difference.",
+    "What makes a journey comfortable for a passenger?": "A comfortable journey means a clean car, smooth driving and the right temperature. I also think it's important to ask passengers if they want music or a quiet journey.",
+    "How do you stay calm in heavy traffic?": "I stay calm by remembering that getting angry doesn't help. I listen to quiet music, take deep breaths and leave enough time for my journeys."
+  };
+  const TOTAL = 10;  // her turda soru sayisi
+  const AGAIN_INTRO = "Welcome back. Let's practise with some new questions.";
   const BETWEEN = ["Thank you.", "Okay, thank you.", "Thank you very much.", "Right, thank you."];
   const CLOSING = "Thank you. That is the end of part one.";
 
@@ -230,23 +319,30 @@
   }
 
   // ---- Kayitli ses (Sonia): her cumle audio/<sira>.mp3; dosya yoksa tarayici sesine duser ----
-  const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course."]);
+  const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
   const player = new Audio();
   player.preload = "auto";
+  // Dosya adi metinden turetilir (djb2): soru eklenip cikarilsa da ses dogru cumleye bagli kalir
+  function key(t) { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(16); }
   const blobs = {};  // onceden indirilen sesler: soru aninda internet beklenmez
-  function preloadClips() {
-    CLIPS.forEach((_, i) => {
-      if (blobs[i]) return;
-      fetch("audio/" + i + ".mp3").then(r => r.ok ? r.blob() : null)
-        .then(b => { if (b) blobs[i] = URL.createObjectURL(b); }).catch(() => {});
+  function preloadClips(texts) {
+    texts.forEach(t => {
+      const k = key(t);
+      if (blobs[k]) return;
+      fetch("audio/" + k + ".mp3").then(r => r.ok ? r.blob() : null)
+        .then(b => { if (b) blobs[k] = URL.createObjectURL(b); }).catch(() => {});
     });
   }
-  function clip(text) { const i = CLIPS.indexOf(text); return i < 0 ? null : (blobs[i] || "audio/" + i + ".mp3"); }
+  function clip(text) { if (!CLIPS.includes(text)) return null; const k = key(text); return blobs[k] || "audio/" + k + ".mp3"; }
+  let cancelPrev = null;
   function say(text) {
     const src = clip(text);
     if (!src) return sayTTS(text);
+    if (cancelPrev) cancelPrev();
     return new Promise(resolve => {
       let done = false, guard = null;
+      // Yeni ses baslarsa bu sessizce kapanir (yedek sese dusup ust uste konusmasin)
+      cancelPrev = () => { if (done) return; done = true; clearTimeout(guard); player.pause(); $("avatar").classList.remove("talking"); resolve(); };
       const finish = ok => {
         if (done) return; done = true;
         clearTimeout(guard);
@@ -270,7 +366,7 @@
   }
   // Telefonlarda ses ancak dokunma aninda "acilabilir": ilk dokunusta oynaticiyi uyandir
   function unlockAudio() {
-    const src = "audio/" + (CLIPS.length - 1) + ".mp3";
+    const src = "audio/" + key("Of course.") + ".mp3";
     player.muted = true; player.src = src;
     const reset = () => { if (player.src.endsWith(src)) player.pause(); player.muted = false; };
     player.play().then(reset).catch(reset);
@@ -317,8 +413,18 @@
   }
 
   // ---- Akis ----
-  let questions = [], idx = 0, answers = [], timerId = null, t0 = 0, active = false;
+  let questions = [], nOpen = 0, idx = 0, answers = [], timerId = null, t0 = 0, active = false;
 
+  // Bu telefonda sorulmus sorular hatirlanir; havuz bitince bastan
+  function freshQuestions(PICK) {
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem("prova-seen") || "[]"); } catch (_) {}
+    let fresh = POOL.filter(q => !seen.includes(q));
+    if (fresh.length < PICK) { seen = []; fresh = POOL.slice(); }
+    const pick = shuffle(fresh).slice(0, PICK);
+    try { localStorage.setItem("prova-seen", JSON.stringify(seen.concat(pick))); } catch (_) {}
+    return pick;
+  }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
   function setStatus(html, cls) { const s = $("status"); s.innerHTML = html; s.className = "status" + (cls ? " " + cls : ""); }
@@ -338,20 +444,23 @@
     startListening();
   }
 
-  async function startCall() {
+  // again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
+  async function startCall(again) {
     unlockAudio();
-    preloadClips();
     // Mikrofon iznini bastan iste (tek seferde)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
     }
-    questions = OPENING.concat(shuffle(POOL).slice(0, PICK));
+    nOpen = again ? 0 : OPENING.length;
+    questions = OPENING.slice(0, nOpen).concat(freshQuestions(TOTAL - nOpen));
+    preloadClips(questions.concat(BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO]));
     idx = 0; answers = []; active = true;
     $("qtext").classList.remove("on"); $("btn-show").textContent = "👁 Soruyu yazılı gör";
     show("s-call");
     t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
     setStatus("Bağlanıyor…");
     await new Promise(r => setTimeout(r, 1200));
+    if (again) { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
     ask(idx);
   }
 
@@ -371,7 +480,7 @@
   }
 
   function endCall() {
-    active = false; stopListening(); if (synth) synth.cancel(); player.pause();
+    active = false; stopListening(); if (synth) synth.cancel(); if (cancelPrev) cancelPrev();
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
     $("result-meta").textContent = `${answers.length} soru cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
@@ -385,19 +494,28 @@
       a.textContent = x.a ? "“" + x.a + "”" : (SR ? "(cevap duyulmadı)" : "(yazıya dökme bu tarayıcıda yok)");
       d.append(q, a);
       // Kisisel bilgi sorulari (ad, memleket) kisa olabilir; digerleri icin uzunluk ipucu
-      if (SR && i >= OPENING.length) {
+      if (SR && i >= nOpen) {
         const h = document.createElement("div");
         if (words < 12) { h.className = "tip"; h.textContent = `İpucu: ${words} kelime – biraz kısa. Bir “because…” ve bir örnek ekleyin.`; }
         else { h.className = "ok"; h.textContent = `${words} kelime – güzel uzunluk.`; }
         d.append(h);
       }
+      const sample = SAMPLE[x.q];
+      if (sample) {
+        const b = document.createElement("button"); b.className = "small sample-btn"; b.textContent = "🔊 Örnek cevabı dinle";
+        const t = document.createElement("div"); t.className = "sample"; t.hidden = true;
+        t.textContent = "Örnek: “" + sample + "”";
+        b.onclick = () => { t.hidden = false; b.textContent = "🔊 Tekrar dinle"; say(sample); };
+        d.append(b, t);
+      }
       box.append(d);
     });
+    preloadClips(answers.map(x => SAMPLE[x.q]).filter(Boolean));
     show("s-result");
   }
 
-  $("btn-start").onclick = startCall;
-  $("btn-again").onclick = startCall;
+  $("btn-start").onclick = () => startCall(false);
+  $("btn-again").onclick = () => startCall(true);
   $("btn-done").onclick = answerDone;
   $("btn-hangup").onclick = endCall;
   $("btn-repeat").onclick = async () => {
