@@ -84,14 +84,57 @@
   .sample { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(59,130,246,.08); border-radius: 8px; font-size: 16px; }
   .tip { color: #ffd58a; font-size: 15px; margin-top: 4px; }
   .ok { color: #7fe0ae; font-size: 15px; margin-top: 4px; }
+  /* Ana menu ve SERU */
+  .menu {
+    display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; cursor: pointer;
+    background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 16px;
+    padding: 18px 16px; margin-top: 14px; font: inherit;
+  }
+  .menu .ico { font-size: 34px; }
+  .back { background: none; border: 0; color: var(--muted); font: inherit; font-size: 15px; padding: 0; cursor: pointer; text-align: left; }
+  .seru-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .seru-top .timer.low { color: var(--red); font-weight: 700; }
+  .qtype { color: var(--muted); font-size: 14px; text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 4px; }
+  .seru-q { font-size: 20px; font-weight: 600; margin: 4px 0 10px; }
+  .passage { font-size: 17px; border-left: 3px solid var(--amber); }
+  .tr { font-size: 16px; color: var(--muted); }
+  .opt {
+    display: block; width: 100%; text-align: left; margin-top: 10px; padding: 14px 16px; cursor: pointer;
+    background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 14px; font: inherit; font-size: 17px;
+  }
+  .opt.sel { border-color: var(--blue); background: rgba(59,130,246,.15); }
+  .opt.right { border-color: var(--green); background: rgba(31,179,107,.18); }
+  .opt.wrong { border-color: var(--red); background: rgba(229,72,77,.18); }
+  .opt:disabled { cursor: default; color: var(--ink); }
+  .feedback.ok { border-color: var(--green); }
+  .feedback.no { border-color: var(--red); }
+  .ref { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  .score { font-size: 28px; font-weight: 700; margin: 8px 0; }
+  .verdict { font-size: 18px; }
+  .verdict.pass { color: #7fe0ae; }
+  .verdict.fail { color: #ffb4b6; }
 </style>
 </head>
 <body>
 <div class="app">
 
   <!-- 1. Karsilama (Turkce) -->
-  <section class="screen on" id="s-intro">
+  <section class="screen on" id="s-home">
     <h1>Sınav Provası</h1>
+    <p class="muted">Londra minicab (PCO) lisansı için hazırlık</p>
+    <button class="menu" data-go="s-intro">
+      <span class="ico">🗣</span>
+      <span><b>İngilizce konuşma provası</b><br><span class="muted">B1 Speaking &amp; Listening – sınav görevlisi sizi arar, soru sorar</span></span>
+    </button>
+    <button class="menu" data-go="s-seru-intro">
+      <span class="ico">📘</span>
+      <span><b>SERU testi</b><br><span class="muted">Kurallar, güvenlik, eşitlik – TfL el kitabından sorular, Türkçe açıklamalı</span></span>
+    </button>
+  </section>
+
+  <section class="screen" id="s-intro">
+    <button class="back" data-go="s-home">← Ana menü</button>
+    <h1>Konuşma Provası</h1>
     <p class="muted">TfL B1 İngilizce konuşma sınavı – 1. Bölüm (kişisel sorular)</p>
 
     <div class="card">
@@ -157,6 +200,58 @@
 
     <div class="spacer"></div>
     <button class="big green" id="btn-again">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
+  </section>
+
+  <!-- SERU -->
+  <section class="screen" id="s-seru-intro">
+    <button class="back" data-go="s-home">← Ana menü</button>
+    <h1>SERU testi</h1>
+    <p class="muted">Safety, Equality and Regulatory Understanding</p>
+    <div class="card">
+      <p><b>Gerçek sınav nasıl?</b></p>
+      <ul class="steps">
+        <li>Bilgisayarda, <b>37 soru</b>, <b>45 dakika</b></li>
+        <li>18 çoktan seçmeli + 17 cümle tamamlama + 2 okuma-anlama</li>
+        <li>Geçmek için <b>%60</b> gerekiyor</li>
+        <li>Sorular TfL'in <i>PHV Driver's Handbook</i> kitabından (sürüm 1.0)</li>
+      </ul>
+      <p class="muted" style="font-size:15px">Buradaki <span id="seru-count"></span> soru aynı kitaptan hazırlandı. Sorular İngilizce – gerçek sınav gibi. İsterseniz Türkçesine bakabilirsiniz.</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="big blue" id="seru-practice">⚡ Hızlı alıştırma – 10 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
+    <button class="big green" id="seru-exam">📝 Sınav provası – 37 soru, 45 dk</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Gerçek sınav gibi – açıklamalar sonda</p>
+  </section>
+
+  <section class="screen" id="s-seru-q">
+    <div class="seru-top">
+      <span class="progress" id="seru-progress"></span>
+      <span class="timer" id="seru-timer"></span>
+      <button class="small" id="seru-quit">Bitir</button>
+    </div>
+    <p class="qtype" id="seru-type"></p>
+    <div class="card passage" id="seru-passage" hidden></div>
+    <p class="seru-q" id="seru-qtext"></p>
+    <button class="small" id="seru-trbtn">🇹🇷 Türkçesini göster</button>
+    <p class="card tr" id="seru-tr" hidden></p>
+    <div id="seru-opts"></div>
+    <div class="card feedback" id="seru-feedback" hidden></div>
+    <div class="spacer"></div>
+    <button class="big blue" id="seru-next" disabled>Sonraki →</button>
+  </section>
+
+  <section class="screen" id="s-seru-result">
+    <h1>Sonuç</h1>
+    <p class="score" id="seru-score"></p>
+    <p class="verdict" id="seru-verdict"></p>
+    <p class="muted" id="seru-meta"></p>
+    <h2 id="seru-wrong-title">Yanlışlarınız – okuyun, öğrenin</h2>
+    <div class="card" id="seru-wrong"></div>
+    <div class="spacer"></div>
+    <button class="big green" id="seru-again">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
   </section>
 </div>
 
@@ -568,7 +663,11 @@
     const on = $("qtext").classList.toggle("on");
     $("btn-show").textContent = on ? "🙈 Yazıyı gizle" : "👁 Soruyu yazılı gör";
   };
+  // Menu gecisleri
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
 })();
 </script>
+<script src="seru-data.js"></script>
+<script src="seru.js"></script>
 </body>
 </html>
