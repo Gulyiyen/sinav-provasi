@@ -334,38 +334,44 @@
     });
   }
   function clip(text) { if (!CLIPS.includes(text)) return null; const k = key(text); return blobs[k] || "audio/" + k + ".mp3"; }
-  let cancelPrev = null;
+  let cancelPrev = null, playId = 0;
   function say(text) {
     const src = clip(text);
     if (!src) return sayTTS(text);
     if (cancelPrev) cancelPrev();
+    const my = ++playId;  // bu sesin kimligi: eski bir sesin zamanlayicisi yenisine dokunamaz
     return new Promise(resolve => {
-      let done = false, guard = null;
-      // Yeni ses baslarsa bu sessizce kapanir (yedek sese dusup ust uste konusmasin)
-      cancelPrev = () => { if (done) return; done = true; clearTimeout(guard); player.pause(); $("avatar").classList.remove("talking"); resolve(); };
+      let done = false, guard = null, lastT = -1, still = 0;
+      const mine = () => my === playId;
+      const end = () => { done = true; clearTimeout(guard); $("avatar").classList.remove("talking"); };
+      // Yeni ses baslarsa bu sessizce kapanir
+      cancelPrev = () => { if (done) return; end(); resolve(); };
       const finish = ok => {
-        if (done) return; done = true;
-        clearTimeout(guard);
-        player.onended = player.onerror = player.onplaying = null;
-        $("avatar").classList.remove("talking");
-        if (ok) resolve(); else sayTTS(text).then(resolve);
+        if (done) return; end();
+        if (mine()) { player.onended = player.onerror = player.onplaying = null; cancelPrev = null; }
+        if (ok || !mine()) resolve(); else sayTTS(text).then(resolve);
       };
-      // Emniyet: telefon "bitti" sinyalini yutarsa sayfa takilmasin
-      guard = setTimeout(() => finish(false), 6000);  // 6 sn icinde baslamazsa yedek sese gec
-      player.onplaying = () => {
-        clearTimeout(guard);
-        const ms = isFinite(player.duration) && player.duration > 0 ? player.duration * 1000 + 1500 : 15000;
-        guard = setTimeout(() => { player.pause(); finish(true); }, ms);
+      // Emniyet: ses ilerledigi surece beklenir; 3 sn hic ilerlemezse (telefon "bitti"yi yuttu) devam edilir
+      const watch = () => {
+        if (done || !mine()) return;
+        if (player.ended) { finish(true); return; }
+        if (player.currentTime > lastT) { lastT = player.currentTime; still = 0; } else if (++still >= 3) { finish(true); return; }
+        guard = setTimeout(watch, 1000);
       };
-      player.onended = () => finish(true);
-      player.onerror = () => finish(false);
+      guard = setTimeout(() => finish(false), 6000);  // 6 sn icinde hic baslamazsa yedek sese gec
+      player.onplaying = () => { if (!mine() || done) return; clearTimeout(guard); guard = setTimeout(watch, 1000); };
+      player.onended = () => { if (mine()) finish(true); };
+      player.onerror = () => { if (mine()) finish(false); };
       player.src = src;
       $("avatar").classList.add("talking");
-      player.play().catch(() => finish(false));
+      player.play().catch(() => { if (mine()) finish(false); });
     });
   }
+
   // Telefonlarda ses ancak dokunma aninda "acilabilir": ilk dokunusta oynaticiyi uyandir
+  let unlocked = false;
   function unlockAudio() {
+    if (unlocked) return; unlocked = true;
     const src = "audio/" + key("Of course.") + ".mp3";
     player.muted = true; player.src = src;
     const reset = () => { if (player.src.endsWith(src)) player.pause(); player.muted = false; };
@@ -447,8 +453,9 @@
   // again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
   async function startCall(again) {
     unlockAudio();
-    // Mikrofon iznini bastan iste (tek seferde)
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (cancelPrev) { cancelPrev(); player.pause(); }  // orn. calan ornek cevabi sustur
+    // Mikrofon iznini bastan iste (yalnizca ilk turda)
+    if (!again && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
     }
     nOpen = again ? 0 : OPENING.length;
@@ -480,7 +487,7 @@
   }
 
   function endCall() {
-    active = false; stopListening(); if (synth) synth.cancel(); if (cancelPrev) cancelPrev();
+    active = false; stopListening(); if (synth) synth.cancel(); if (cancelPrev) { cancelPrev(); player.pause(); }
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
     $("result-meta").textContent = `${answers.length} soru cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
