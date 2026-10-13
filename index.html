@@ -233,17 +233,33 @@
   const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course."]);
   const player = new Audio();
   player.preload = "auto";
-  function clip(text) { const i = CLIPS.indexOf(text); return i < 0 ? null : "audio/" + i + ".mp3"; }
+  const blobs = {};  // onceden indirilen sesler: soru aninda internet beklenmez
+  function preloadClips() {
+    CLIPS.forEach((_, i) => {
+      if (blobs[i]) return;
+      fetch("audio/" + i + ".mp3").then(r => r.ok ? r.blob() : null)
+        .then(b => { if (b) blobs[i] = URL.createObjectURL(b); }).catch(() => {});
+    });
+  }
+  function clip(text) { const i = CLIPS.indexOf(text); return i < 0 ? null : (blobs[i] || "audio/" + i + ".mp3"); }
   function say(text) {
     const src = clip(text);
     if (!src) return sayTTS(text);
     return new Promise(resolve => {
-      let done = false;
+      let done = false, guard = null;
       const finish = ok => {
         if (done) return; done = true;
-        player.onended = player.onerror = null;
+        clearTimeout(guard);
+        player.onended = player.onerror = player.onplaying = null;
         $("avatar").classList.remove("talking");
         if (ok) resolve(); else sayTTS(text).then(resolve);
+      };
+      // Emniyet: telefon "bitti" sinyalini yutarsa sayfa takilmasin
+      guard = setTimeout(() => finish(false), 6000);  // 6 sn icinde baslamazsa yedek sese gec
+      player.onplaying = () => {
+        clearTimeout(guard);
+        const ms = isFinite(player.duration) && player.duration > 0 ? player.duration * 1000 + 1500 : 15000;
+        guard = setTimeout(() => { player.pause(); finish(true); }, ms);
       };
       player.onended = () => finish(true);
       player.onerror = () => finish(false);
@@ -272,9 +288,10 @@
     finalText = ""; interimText = ""; listening = true;
     renderTranscript();
     if (!SR) return;
-    rec = new SR();
+    const r0 = rec = new SR();
     rec.lang = "en-GB"; rec.continuous = true; rec.interimResults = true;
     rec.onresult = e => {
+      if (r0 !== rec) return;
       interimText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
@@ -290,12 +307,12 @@
       }
     };
     // Chrome sessizlikte dinlemeyi kendisi kapatir: cevap bitmediyse yeniden ac
-    rec.onend = () => { if (listening) { try { rec.start(); } catch (_) {} } };
+    rec.onend = () => { if (listening && r0 === rec) { try { rec.start(); } catch (_) {} } };
     try { rec.start(); } catch (_) {}
   }
   function stopListening() {
     listening = false;
-    if (rec) { try { rec.stop(); } catch (_) {} rec = null; }
+    if (rec) { const r = rec; rec = null; try { r.abort(); } catch (_) {} }
     return (finalText + " " + interimText).trim();
   }
 
@@ -323,6 +340,7 @@
 
   async function startCall() {
     unlockAudio();
+    preloadClips();
     // Mikrofon iznini bastan iste (tek seferde)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
@@ -339,10 +357,10 @@
 
   async function answerDone() {
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
+    setStatus("✓ Cevabınız alındı");
     answers.push({ q: questions[idx], a: stopListening() });
     idx++;
     if (idx < questions.length) {
-      setStatus("…");
       await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);
       ask(idx);
     } else {
