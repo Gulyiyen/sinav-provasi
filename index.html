@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Sınav Provası</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root {
     --bg: #0f1720; --panel: #17222e; --ink: #f3f6f9; --muted: #9fb0c0;
@@ -115,6 +116,15 @@
   .verdict { font-size: 18px; }
   .verdict.pass { color: #7fe0ae; }
   .verdict.fail { color: #ffb4b6; }
+  /* Harita */
+  .mapbox { position: relative; margin: 6px 0 4px; }
+  #topo-map { height: 320px; border-radius: 14px; border: 1px solid var(--line); background: #dfe6ea; }
+  .shield { transform: translate(-50%, -50%); display: inline-block; white-space: nowrap; background: #fff; color: #000; border: 2px solid #000; border-radius: 4px; padding: 0 5px; font: 700 13px/18px system-ui, sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,.45); }
+  .pin { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #fff; color: #fff; font: 700 13px/20px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .gridlab { width: 22px; height: 22px; border-radius: 6px; background: #d0021b; color: #fff; font: 700 13px/22px system-ui, sans-serif; text-align: center; }
+  .signbox { width: 150px; height: 150px; margin: 6px auto; background: #fff; border-radius: 14px; padding: 10px; }
+  .signsm { width: 70px; height: 70px; background: #fff; border-radius: 8px; padding: 4px; margin: 6px 0; }
+  .signbox svg, .signsm svg { width: 100%; height: 100%; display: block; }
 </style>
 </head>
 <body>
@@ -131,6 +141,10 @@
     <button class="menu" data-go="s-seru-intro">
       <span class="ico">📘</span>
       <span><b>SERU testi</b><br><span class="muted">Kurallar, güvenlik, eşitlik – TfL el kitabından sorular, Türkçe açıklamalı</span></span>
+    </button>
+    <button class="menu" data-go="s-topo-intro">
+      <span class="ico">🗺</span>
+      <span><b>Harita testi (Topographical)</b><br><span class="muted">Gerçek Londra haritasında yön, kare, sokak, yol numarası, işaretler</span></span>
     </button>
   </section>
 
@@ -258,6 +272,62 @@
     <div class="card" id="seru-wrong"></div>
     <div class="spacer"></div>
     <button class="big green" id="seru-again">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
+  </section>
+
+  <!-- Harita (Topographical) -->
+  <section class="screen" id="s-topo-intro">
+    <button class="back" data-go="s-home">← Ana menü</button>
+    <h1>Harita testi</h1>
+    <p class="muted">TfL Topographical Skills Assessment</p>
+    <div class="card">
+      <p><b>Gerçek harita sınavı nasıl yapılıyor?</b></p>
+      <ul class="steps">
+        <li>Test merkezinde, bilgisayarda, ekrandaki harita üzerinde</li>
+        <li><b>66 puan:</b> 3 rota çizme sorusu (kısa, yol kapatmalı kısa, uzun)</li>
+        <li><b>34 puan:</b> çoktan seçmeli – işaretler, önemli yerler, sokak bulma, yol numaraları, pusula yönleri, rota planlama doğru/yanlış</li>
+        <li>Geçmek için <b>%60</b> gerekiyor</li>
+      </ul>
+      <p class="muted" style="font-size:15px">Bu provada <b>çoktan seçmeli kısım</b> var. Sorular gerçek Londra haritasında (OpenStreetMap) her seferinde yeniden üretilir. Haritayı parmakla kaydırıp büyütebilirsiniz. Rota çizme kısmı sonra eklenecek.</p>
+    </div>
+    <div class="spacer"></div>
+    <button class="big blue" id="topo-practice">⚡ Hızlı alıştırma – 10 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
+    <button class="big green" id="topo-long">📝 Uzun prova – 20 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Açıklamalar sonda</p>
+  </section>
+
+  <section class="screen" id="s-topo-q">
+    <div class="seru-top">
+      <span class="progress" id="topo-progress"></span>
+      <button class="small" id="topo-quit">Bitir</button>
+    </div>
+    <p class="qtype" id="topo-type"></p>
+    <p class="seru-q" id="topo-qtext"></p>
+    <div class="mapbox" id="topo-mapbox" hidden>
+      <div id="topo-map"></div>
+    </div>
+    <div class="signbox" id="topo-sign" hidden></div>
+    <div class="row" style="justify-content:flex-start">
+      <button class="small" id="topo-trbtn">🇹🇷 Türkçesini göster</button>
+      <button class="small" id="topo-reset">↺ Haritayı ortala</button>
+    </div>
+    <p class="card tr" id="topo-tr" hidden></p>
+    <div id="topo-opts"></div>
+    <div class="card feedback" id="topo-feedback" hidden></div>
+    <div class="spacer"></div>
+    <button class="big blue" id="topo-next" disabled>Sonraki →</button>
+  </section>
+
+  <section class="screen" id="s-topo-result">
+    <h1>Sonuç</h1>
+    <p class="score" id="topo-score"></p>
+    <p class="verdict" id="topo-verdict"></p>
+    <p class="muted" id="topo-meta"></p>
+    <h2 id="topo-wrong-title">Yanlışlarınız – okuyun, öğrenin</h2>
+    <div class="card" id="topo-wrong"></div>
+    <div class="spacer"></div>
+    <button class="big green" id="topo-again">🔁 Yeni sorularla tekrar</button>
     <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
   </section>
 </div>
@@ -725,5 +795,9 @@
 <script src="seru-data.js"></script>
 <script src="seru-data-2.js"></script>
 <script src="seru.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="topo-geo.js"></script>
+<script src="topo-data.js"></script>
+<script src="topo.js"></script>
 </body>
 </html>
