@@ -82,6 +82,8 @@
   .ans .a.empty { color: var(--muted); font-style: italic; }
   .sample-btn { margin-top: 8px; }
   .sample { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(59,130,246,.08); border-radius: 8px; font-size: 16px; }
+  .rpcard { border-left: 3px solid var(--amber); font-size: 16px; }
+  .rpcard b { display: block; margin-bottom: 4px; }
   .tip { color: #ffd58a; font-size: 15px; margin-top: 4px; }
   .ok { color: #7fe0ae; font-size: 15px; margin-top: 4px; }
   /* Ana menu ve SERU */
@@ -135,12 +137,12 @@
   <section class="screen" id="s-intro">
     <button class="back" data-go="s-home">← Ana menü</button>
     <h1>Konuşma Provası</h1>
-    <p class="muted">TfL B1 İngilizce konuşma sınavı – 1. Bölüm (kişisel sorular)</p>
+    <p class="muted">TfL B1 İngilizce konuşma sınavı provası</p>
 
     <div class="card">
       <p><b>Nasıl çalışır?</b></p>
       <ol class="steps">
-        <li>Yeşil düğmeye basın. Sınav görevlisi sizi <b>arar</b> ve İngilizce soru sorar.</li>
+        <li>Bir bölüm seçin. Sınav görevlisi sizi <b>arar</b> ve İngilizce konuşur.</li>
         <li>Soruyu dinleyin, sonra <b>İngilizce cevap verin</b>. Telefonla konuşur gibi.</li>
         <li>Cevabınız bitince <b>“Cevabım bitti”</b> düğmesine basın.</li>
         <li>Sonunda söylediklerinizi yazılı olarak görürsünüz.</li>
@@ -151,7 +153,10 @@
     <div class="card warn" id="support-warn" hidden></div>
 
     <div class="spacer"></div>
-    <button class="big green" id="btn-start">📞 Provayı başlat</button>
+    <button class="big green" id="btn-start">📞 Bölüm 1 – Kişisel sorular</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Kendiniz, aileniz, işiniz, Londra hakkında 10 soru</p>
+    <button class="big blue" id="btn-start-rp">🎭 Bölüm 2 – Rol yapma</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Görevli yolcu olur, siz şoför olursunuz – 2 durum</p>
     <p class="muted" style="text-align:center;font-size:14px">Telefon sizden mikrofon izni isteyecek – “İzin ver” deyin.</p>
   </section>
 
@@ -167,6 +172,8 @@
 
     <div class="status" id="status">Bağlanıyor…</div>
     <div class="progress" id="progress"></div>
+
+    <div class="card rpcard" id="rpcard" hidden></div>
 
     <div class="card qtext" id="qtext"></div>
 
@@ -255,6 +262,7 @@
   </section>
 </div>
 
+<script src="roleplay-data.js"></script>
 <script>
 (() => {
   // ---- Sorular: TfL B1 Speaking & Listening, Bolum 1 (kisisel sorular) ----
@@ -414,7 +422,18 @@
   }
 
   // ---- Kayitli ses (Sonia): her cumle audio/<sira>.mp3; dosya yoksa tarayici sesine duser ----
-  const CLIPS = OPENING.concat(POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
+  // Bolum 2 (rol yapma): ilk replik, gorevlinin durumu anlattigi girisle birlikte tek cumle olarak okunur
+  const RP_FIRST = "Now let's do some role plays. I will be the passenger, and you will be the driver.";
+  const RP_NEXT = "Thank you. Now let's do another role play.";
+  const RP_CLOSING = "Thank you. That is the end of the role plays.";
+  const RP_PICK = 2;
+  const RP = (window.ROLEPLAYS || []).map(r => ({
+    card: r.card,
+    lines: r.lines.map((l, k) => ({ q: k === 0 ? r.intro + " " + l[0] : l[0], a: l[1] }))
+  }));
+  RP.forEach(r => r.lines.forEach(l => { SAMPLE[l.q] = l.a; }));
+  const RP_TEXTS = RP.flatMap(r => r.lines.map(l => l.q)).concat([RP_FIRST, RP_NEXT, RP_CLOSING]);
+  const CLIPS = RP_TEXTS.concat(POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
   const player = new Audio();
   player.preload = "auto";
 
@@ -541,8 +560,19 @@
   }
 
   // ---- Akis ----
+  let mode = "p1", meta = [], micAsked = false;
   let questions = [], nOpen = 0, idx = 0, answers = [], timerId = null, t0 = 0, active = false;
 
+  // Rol yapma: sorulan durumlar hatirlanir, hepsi bitince bastan
+  function freshRoleplays(n) {
+    let seen = [];
+    try { seen = JSON.parse(localStorage.getItem("prova-rp-seen") || "[]"); } catch (_) {}
+    let fresh = RP.map((_, i) => i).filter(i => !seen.includes(i));
+    if (fresh.length < n) { seen = []; fresh = RP.map((_, i) => i); }
+    const pick = shuffle(fresh).slice(0, n);
+    try { localStorage.setItem("prova-rp-seen", JSON.stringify(seen.concat(pick))); } catch (_) {}
+    return pick.map(i => RP[i]);
+  }
   // Bu telefonda sorulmus sorular hatirlanir; havuz bitince bastan
   function freshQuestions(PICK) {
     let seen = [];
@@ -560,11 +590,23 @@
 
   async function ask(i) {
     if (!active) return;
-    const q = questions[i];
-    $("progress").textContent = `Soru ${i + 1} / ${questions.length}`;
+    const q = questions[i], m = meta[i];
     $("qtext").textContent = q;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
     setStatus("Görevli konuşuyor… dinleyin");
+    if (m) {
+      $("progress").textContent = `Rol ${m.n} / ${RP_PICK} · Replik ${m.k + 1} / ${m.rp.lines.length}`;
+      if (m.k === 0) {
+        const c = $("rpcard"); c.innerHTML = "";
+        const h = document.createElement("b"); h.textContent = "🎭 Rol kartınız";
+        const t = document.createElement("span"); t.textContent = m.rp.card;
+        c.append(h, t); c.hidden = false;
+        await say(m.n === 1 ? RP_FIRST : RP_NEXT);
+        if (!active) return;
+      }
+    } else {
+      $("progress").textContent = `Soru ${i + 1} / ${questions.length}`;
+    }
     await say(q);
     if (!active) return;
     setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
@@ -572,24 +614,34 @@
     startListening();
   }
 
-  // again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
-  async function startCall(again) {
+  // m: "p1" kisisel sorular, "p2" rol yapma. again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
+  async function startCall(again, m) {
+    mode = m || "p1";
     unlockAudio();
     if (cancelPrev) { cancelPrev(); player.pause(); }  // orn. calan ornek cevabi sustur
     // Mikrofon iznini bastan iste (yalnizca ilk turda)
-    if (!again && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (!micAsked && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      micAsked = true;
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
     }
-    nOpen = again ? 0 : OPENING.length;
-    questions = OPENING.slice(0, nOpen).concat(freshQuestions(TOTAL - nOpen));
-    preloadClips(questions.concat(BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO]));
+    if (mode === "p2") {
+      nOpen = 0; questions = []; meta = [];
+      freshRoleplays(RP_PICK).forEach((rp, j) => rp.lines.forEach((l, k) => { questions.push(l.q); meta.push({ rp, n: j + 1, k }); }));
+      preloadClips(questions.concat([RP_FIRST, RP_NEXT, RP_CLOSING, "Of course."]));
+    } else {
+      nOpen = again ? 0 : OPENING.length; meta = [];
+      questions = OPENING.slice(0, nOpen).concat(freshQuestions(TOTAL - nOpen));
+      preloadClips(questions.concat(BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO]));
+    }
+    $("rpcard").hidden = true;
+    $("btn-done").disabled = true; $("btn-repeat").disabled = true;  // soru sorulmadan cevap verilemesin
     idx = 0; answers = []; active = true;
     $("qtext").classList.remove("on"); $("btn-show").textContent = "👁 Soruyu yazılı gör";
     show("s-call");
     t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
     setStatus("Bağlanıyor…");
     await new Promise(r => setTimeout(r, 1200));
-    if (again) { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
+    if (again && mode === "p1") { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
     ask(idx);
   }
 
@@ -599,20 +651,21 @@
     answers.push({ q: questions[idx], a: stopListening() });
     idx++;
     if (idx < questions.length) {
-      await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);
+      if (mode === "p1") await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);  // rol yapmada sohbet kesintisiz akar
       ask(idx);
     } else {
       setStatus("Görevli konuşuyor…");
-      await say(CLOSING);
+      await say(mode === "p2" ? RP_CLOSING : CLOSING);
       endCall();
     }
   }
 
   function endCall() {
-    active = false; stopListening(); if (synth) synth.cancel(); if (cancelPrev) { cancelPrev(); player.pause(); }
+    active = false; stopListening(); if (synth) synth.cancel();
+    $("btn-done").disabled = true; $("btn-repeat").disabled = true; if (cancelPrev) { cancelPrev(); player.pause(); }
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
-    $("result-meta").textContent = `${answers.length} soru cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
+    $("result-meta").textContent = `${answers.length} ${mode === "p2" ? "replik" : "soru"} cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
     const box = $("answers"); box.innerHTML = "";
     if (!answers.length) box.innerHTML = '<p class="muted">Hiç soru cevaplanmadı.</p>';
     answers.forEach((x, i) => {
@@ -625,7 +678,8 @@
       // Kisisel bilgi sorulari (ad, memleket) kisa olabilir; digerleri icin uzunluk ipucu
       if (SR && i >= nOpen) {
         const h = document.createElement("div");
-        if (words < 12) { h.className = "tip"; h.textContent = `İpucu: ${words} kelime – biraz kısa. Bir “because…” ve bir örnek ekleyin.`; }
+        const min = mode === "p2" ? 8 : 12;  // rol yapmada cevaplar dogal olarak daha kisa
+        if (words < min) { h.className = "tip"; h.textContent = mode === "p2" ? `İpucu: ${words} kelime – biraz kısa. Yolcuya bir açıklama ya da bir öneri ekleyin.` : `İpucu: ${words} kelime – biraz kısa. Bir “because…” ve bir örnek ekleyin.`; }
         else { h.className = "ok"; h.textContent = `${words} kelime – güzel uzunluk.`; }
         d.append(h);
       }
@@ -643,8 +697,9 @@
     show("s-result");
   }
 
-  $("btn-start").onclick = () => startCall(false);
-  $("btn-again").onclick = () => startCall(true);
+  $("btn-start").onclick = () => startCall(false, "p1");
+  $("btn-start-rp").onclick = () => startCall(false, "p2");
+  $("btn-again").onclick = () => startCall(true, mode);
   $("btn-done").onclick = answerDone;
   $("btn-hangup").onclick = endCall;
   $("btn-repeat").onclick = async () => {
