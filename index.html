@@ -13,6 +13,7 @@
     --line: #26384a;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }  /* .big gibi display veren siniflar hidden'i ezmesin */
   html, body { margin: 0; height: 100%; }
   body {
     background: var(--bg); color: var(--ink);
@@ -125,6 +126,12 @@
   .signbox { width: 150px; height: 150px; margin: 6px auto; background: #fff; border-radius: 14px; padding: 10px; }
   .signsm { width: 70px; height: 70px; background: #fff; border-radius: 8px; padding: 4px; margin: 6px 0; }
   .signbox svg, .signsm svg { width: 100%; height: 100%; display: block; }
+  #route-map { height: 58vh; min-height: 340px; border-radius: 14px; border: 1px solid var(--line); background: #dfe6ea; }
+  .rsign svg { display: block; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+  .closedlab { transform: translate(-50%, -150%); background: #d0021b; color: #fff; font: 700 13px/20px system-ui, sans-serif; padding: 0 6px; border-radius: 4px; white-space: nowrap; }
+  .rowbtn { display: flex; gap: 8px; margin-top: 8px; }
+  .rowbtn .small { flex: 1; }
+  .rowbtn .small.go { background: var(--green); border-color: var(--green); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -288,13 +295,54 @@
         <li><b>34 puan:</b> çoktan seçmeli – işaretler, önemli yerler, sokak bulma, yol numaraları, pusula yönleri, rota planlama doğru/yanlış</li>
         <li>Geçmek için <b>%60</b> gerekiyor</li>
       </ul>
-      <p class="muted" style="font-size:15px">Bu provada <b>çoktan seçmeli kısım</b> var. Sorular gerçek Londra haritasında (OpenStreetMap) her seferinde yeniden üretilir. Haritayı parmakla kaydırıp büyütebilirsiniz. Rota çizme kısmı sonra eklenecek.</p>
+      <p class="muted" style="font-size:15px">Her iki kısım da burada: çoktan seçmeli sorular ve aşağıda <b>rota çizme</b>. Hepsi gerçek Londra haritasında (OpenStreetMap), her seferinde yeniden üretilir. Haritayı parmakla kaydırıp büyütebilirsiniz.</p>
     </div>
     <div class="spacer"></div>
     <button class="big blue" id="topo-practice">⚡ Hızlı alıştırma – 10 soru</button>
     <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
     <button class="big green" id="topo-long">📝 Uzun prova – 20 soru</button>
     <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Açıklamalar sonda</p>
+
+    <h2>🧭 Rota çizme (66 puan)</h2>
+    <p class="muted" style="font-size:15px;margin-top:0">Haritada yeşilden kırmızıya en direkt rotayı çizin. Tek yönler, yasak dönüşler ve kapalı yol gerçek Londra verisinden kontrol edilir.</p>
+    <button class="big green" id="route-exam">📝 3 rotalık prova (kısa, yol kapalı, uzun)</button>
+    <div class="rowbtn">
+      <button class="small" id="route-short">Kısa rota</button>
+      <button class="small" id="route-closed">Yol kapalı</button>
+      <button class="small" id="route-long">Uzun rota</button>
+    </div>
+  </section>
+
+  <section class="screen" id="s-route">
+    <div class="seru-top">
+      <span class="progress" id="route-progress"></span>
+      <button class="small" data-go="s-topo-intro">Çık</button>
+    </div>
+    <p class="seru-q" id="route-q" style="font-size:17px"></p>
+    <div id="route-map"></div>
+    <p class="muted" id="route-status" style="font-size:15px;min-height:22px"></p>
+    <div class="rowbtn">
+      <button class="small" id="route-undo">↶ Geri al</button>
+      <button class="small" id="route-clear">🗑 Temizle</button>
+      <button class="small go" id="route-submit">✓ Rotayı bitir</button>
+    </div>
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <button class="small" id="route-trbtn">🇹🇷 Türkçesi</button>
+      <span class="muted" id="route-len" style="font-size:14px"></span>
+    </div>
+    <p class="card tr" id="route-tr" hidden></p>
+    <div class="card feedback" id="route-feedback" hidden></div>
+    <button class="big blue" id="route-next" hidden>Sonraki rota →</button>
+  </section>
+
+  <section class="screen" id="s-route-result">
+    <h1>Rota sonucu</h1>
+    <p class="score" id="route-score"></p>
+    <p class="verdict" id="route-verdict"></p>
+    <div class="card" id="route-sum"></div>
+    <div class="spacer"></div>
+    <button class="big green" id="route-again">🔁 Yeni rotalarla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-topo-intro">← Harita testi</button>
   </section>
 
   <section class="screen" id="s-topo-q">
@@ -799,5 +847,6 @@
 <script src="topo-geo.js"></script>
 <script src="topo-data.js"></script>
 <script src="topo.js"></script>
+<script src="route.js"></script>
 </body>
 </html>
