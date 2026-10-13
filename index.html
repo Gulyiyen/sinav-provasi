@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Sınav Provası</title>
+<style>
+  :root {
+    --bg: #0f1720; --panel: #17222e; --ink: #f3f6f9; --muted: #9fb0c0;
+    --green: #1fb36b; --red: #e5484d; --blue: #3b82f6; --amber: #f5a524;
+    --line: #26384a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 18px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; justify-content: center;
+  }
+  .app { width: 100%; max-width: 480px; min-height: 100%; padding: 24px 16px 32px; display: flex; flex-direction: column; }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.on { display: flex; }
+  h1 { font-size: 28px; margin: 8px 0 4px; }
+  h2 { font-size: 20px; margin: 20px 0 8px; }
+  p { margin: 8px 0; }
+  .muted { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 12px 0; }
+  .steps { padding-left: 22px; margin: 8px 0; }
+  .steps li { margin: 6px 0; }
+  .big {
+    display: block; width: 100%; border: 0; border-radius: 999px; padding: 20px;
+    font-size: 21px; font-weight: 700; color: #fff; cursor: pointer; margin-top: 12px;
+  }
+  .big.green { background: var(--green); }
+  .big.red { background: var(--red); }
+  .big.blue { background: var(--blue); }
+  .big:disabled { opacity: .45; cursor: default; }
+  .small {
+    background: transparent; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 999px; padding: 10px 14px; font-size: 15px; cursor: pointer;
+  }
+  .warn { border-color: var(--amber); color: #ffd58a; font-size: 16px; }
+
+  /* Arama ekrani */
+  .call-top { text-align: center; margin-top: 8px; }
+  .avatar {
+    width: 132px; height: 132px; border-radius: 50%; margin: 18px auto 10px;
+    background: linear-gradient(160deg, #2b4a66, #1a2b3b); display: grid; place-items: center;
+    position: relative;
+  }
+  .avatar svg { width: 76px; height: 76px; opacity: .9; }
+  .avatar.talking::after {
+    content: ""; position: absolute; inset: -10px; border-radius: 50%;
+    border: 3px solid var(--blue); animation: pulse 1.2s ease-out infinite;
+  }
+  @keyframes pulse { from { transform: scale(.92); opacity: 1; } to { transform: scale(1.12); opacity: 0; } }
+  .name { font-size: 22px; font-weight: 700; }
+  .timer { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .status {
+    text-align: center; margin: 18px 0 6px; font-size: 19px; font-weight: 600; min-height: 28px;
+  }
+  .status.listen { color: var(--green); }
+  .mic {
+    width: 18px; height: 18px; border-radius: 50%; background: var(--green);
+    display: inline-block; vertical-align: -2px; margin-right: 8px; animation: blink 1s infinite;
+  }
+  @keyframes blink { 50% { opacity: .25; } }
+  .qtext { display: none; font-size: 17px; }
+  .qtext.on { display: block; }
+  .transcript { min-height: 64px; font-size: 17px; }
+  .transcript .interim { color: var(--muted); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  .progress { text-align: center; color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .spacer { flex: 1; }
+
+  /* Sonuc ekrani */
+  .ans { border-top: 1px solid var(--line); padding: 12px 0; }
+  .ans:first-child { border-top: 0; }
+  .ans .q { font-weight: 600; }
+  .ans .a { margin-top: 4px; }
+  .ans .a.empty { color: var(--muted); font-style: italic; }
+  .tip { color: #ffd58a; font-size: 15px; margin-top: 4px; }
+  .ok { color: #7fe0ae; font-size: 15px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 1. Karsilama (Turkce) -->
+  <section class="screen on" id="s-intro">
+    <h1>Sınav Provası</h1>
+    <p class="muted">TfL B1 İngilizce konuşma sınavı – 1. Bölüm (kişisel sorular)</p>
+
+    <div class="card">
+      <p><b>Nasıl çalışır?</b></p>
+      <ol class="steps">
+        <li>Yeşil düğmeye basın. Sınav görevlisi sizi <b>arar</b> ve İngilizce soru sorar.</li>
+        <li>Soruyu dinleyin, sonra <b>İngilizce cevap verin</b>. Telefonla konuşur gibi.</li>
+        <li>Cevabınız bitince <b>“Cevabım bitti”</b> düğmesine basın.</li>
+        <li>Sonunda söylediklerinizi yazılı olarak görürsünüz.</li>
+      </ol>
+      <p class="muted">Puan yok, kayıt yok. Sesiniz saklanmaz. İstediğiniz kadar tekrar edin.</p>
+    </div>
+
+    <div class="card warn" id="support-warn" hidden></div>
+
+    <div class="spacer"></div>
+    <button class="big green" id="btn-start">📞 Provayı başlat</button>
+    <p class="muted" style="text-align:center;font-size:14px">Telefon sizden mikrofon izni isteyecek – “İzin ver” deyin.</p>
+  </section>
+
+  <!-- 2. Arama -->
+  <section class="screen" id="s-call">
+    <div class="call-top">
+      <div class="avatar" id="avatar">
+        <svg viewBox="0 0 24 24" fill="#cfe0f0"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.6 4.3-7 8.5-7s7.7 2.4 8.5 7z"/></svg>
+      </div>
+      <div class="name">Sınav görevlisi</div>
+      <div class="timer" id="timer">00:00</div>
+    </div>
+
+    <div class="status" id="status">Bağlanıyor…</div>
+    <div class="progress" id="progress"></div>
+
+    <div class="card qtext" id="qtext"></div>
+
+    <div class="card transcript" id="transcript"><span class="muted">Söyledikleriniz burada yazıya dökülecek.</span></div>
+
+    <div class="row">
+      <button class="small" id="btn-repeat" disabled>🔁 Soruyu tekrar dinle</button>
+      <button class="small" id="btn-show">👁 Soruyu yazılı gör</button>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="big blue" id="btn-done" disabled>✓ Cevabım bitti</button>
+    <button class="big red" id="btn-hangup">Aramayı bitir</button>
+  </section>
+
+  <!-- 3. Sonuc -->
+  <section class="screen" id="s-result">
+    <h1>Prova bitti 👏</h1>
+    <p class="muted" id="result-meta"></p>
+    <div class="card" id="answers"></div>
+
+    <div class="card">
+      <p><b>Gerçek sınavda işe yarayan 3 şey</b></p>
+      <ol class="steps">
+        <li>Tek kelimeyle cevap vermeyin. <b>2–3 cümle</b> kurun: cevap + neden + küçük bir örnek.</li>
+        <li>Soruyu anlamazsanız sorun değil, şunu söyleyin: <b>“Sorry, could you repeat that, please?”</b></li>
+        <li>Düşünmek için zaman kazanın: <b>“That's a good question…”</b> / <b>“Let me think…”</b></li>
+      </ol>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="big green" id="btn-again">🔁 Yeni sorularla tekrar</button>
+  </section>
+</div>
+
+<script>
+(() => {
+  // ---- Sorular: TfL B1 Speaking & Listening, Bolum 1 (kisisel sorular) ----
+  const OPENING = [
+    "Hello. Thank you for coming today. I'm going to ask you some questions about yourself. First, can you tell me your full name, please?",
+    "Thank you. And where are you from?"
+  ];
+  const POOL = [
+    "How long have you lived in the UK?",
+    "What do you like most about living in London?",
+    "What do you usually do in your free time?",
+    "Can you tell me something about your family?",
+    "What kind of work do you do at the moment?",
+    "Why do you want to become a private hire driver?",
+    "What do you think makes a good driver?",
+    "How do you usually travel around London?",
+    "What is your favourite part of London, and why?",
+    "Do you prefer working in the day or at night? Why?",
+    "What did you do last weekend?",
+    "What are your plans for next year?",
+    "Can you describe the area where you live?",
+    "What kind of food do you like? Do you enjoy cooking?",
+    "How do you relax after a long day at work?",
+    "What was your first job?",
+    "Do you enjoy driving? Why, or why not?",
+    "How has London changed since you first came here?",
+    "What would you do if a passenger left something in your car?",
+    "What is the best thing about your job?"
+  ];
+  const PICK = 5;
+  const BETWEEN = ["Thank you.", "Okay, thank you.", "Thank you very much.", "Right, thank you."];
+  const CLOSING = "Thank you. That is the end of part one.";
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const synth = window.speechSynthesis;
+  const $ = id => document.getElementById(id);
+
+  // ---- Destek kontrolu ----
+  const warn = [];
+  if (!synth) warn.push("Bu tarayıcı sesli okuma yapamıyor.");
+  if (!SR) warn.push("Bu tarayıcı konuşmanızı yazıya dökemiyor. Prova yine çalışır ama sonunda yazı görmezsiniz. En iyisi: <b>Chrome</b>.");
+  if (warn.length) { $("support-warn").innerHTML = warn.join("<br>"); $("support-warn").hidden = false; }
+
+  // ---- Ingiliz sesi sec ----
+  let voice = null;
+  function pickVoice() {
+    const vs = synth ? synth.getVoices() : [];
+    const gb = vs.filter(v => /en[-_]GB/i.test(v.lang));
+    const prefer = [/Sonia|Libby|Ryan|Maisie|Thomas/i, /Natural|Online/i, /Google UK English Female/i, /Google UK English/i];
+    for (const re of prefer) { const v = gb.find(v => re.test(v.name)); if (v) return v; }
+    return gb[0] || vs.find(v => /^en/i.test(v.lang)) || null;
+  }
+  if (synth) { voice = pickVoice(); synth.onvoiceschanged = () => { voice = pickVoice(); }; }
+
+  function say(text) {
+    return new Promise(resolve => {
+      if (!synth) { resolve(); return; }
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.lang = voice ? voice.lang : "en-GB";
+      u.rate = 0.92;
+      $("avatar").classList.add("talking");
+      let done = false;
+      const finish = () => { if (done) return; done = true; $("avatar").classList.remove("talking"); resolve(); };
+      u.onend = finish; u.onerror = finish;
+      // Bazi tarayicilarda onend gelmez: metin uzunluguna gore emniyet suresi
+      setTimeout(finish, 2500 + text.length * 90);
+      synth.speak(u);
+    });
+  }
+
+  // ---- Konusma tanima ----
+  let rec = null, listening = false, finalText = "", interimText = "";
+  function renderTranscript() {
+    const t = $("transcript");
+    if (!finalText && !interimText) { t.innerHTML = '<span class="muted">Konuşun… söyledikleriniz burada görünecek.</span>'; return; }
+    t.textContent = finalText + " ";
+    if (interimText) { const s = document.createElement("span"); s.className = "interim"; s.textContent = interimText; t.appendChild(s); }
+  }
+  function startListening() {
+    finalText = ""; interimText = ""; listening = true;
+    renderTranscript();
+    if (!SR) return;
+    rec = new SR();
+    rec.lang = "en-GB"; rec.continuous = true; rec.interimResults = true;
+    rec.onresult = e => {
+      interimText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText = (finalText + " " + r[0].transcript).trim();
+        else interimText += r[0].transcript;
+      }
+      renderTranscript();
+    };
+    rec.onerror = e => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        $("transcript").innerHTML = '<span class="muted">Mikrofon izni verilmedi. Yine de konuşabilirsiniz; sadece yazı görünmez.</span>';
+        listening = false;
+      }
+    };
+    // Chrome sessizlikte dinlemeyi kendisi kapatir: cevap bitmediyse yeniden ac
+    rec.onend = () => { if (listening) { try { rec.start(); } catch (_) {} } };
+    try { rec.start(); } catch (_) {}
+  }
+  function stopListening() {
+    listening = false;
+    if (rec) { try { rec.stop(); } catch (_) {} rec = null; }
+    return (finalText + " " + interimText).trim();
+  }
+
+  // ---- Akis ----
+  let questions = [], idx = 0, answers = [], timerId = null, t0 = 0, active = false;
+
+  function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
+  function setStatus(html, cls) { const s = $("status"); s.innerHTML = html; s.className = "status" + (cls ? " " + cls : ""); }
+  function tick() { const s = Math.floor((Date.now() - t0) / 1000); $("timer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+
+  async function ask(i) {
+    if (!active) return;
+    const q = questions[i];
+    $("progress").textContent = `Soru ${i + 1} / ${questions.length}`;
+    $("qtext").textContent = q;
+    $("btn-done").disabled = true; $("btn-repeat").disabled = true;
+    setStatus("Görevli konuşuyor… dinleyin");
+    await say(q);
+    if (!active) return;
+    setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
+    $("btn-done").disabled = false; $("btn-repeat").disabled = false;
+    startListening();
+  }
+
+  async function startCall() {
+    // Mikrofon iznini bastan iste (tek seferde)
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
+    }
+    questions = OPENING.concat(shuffle(POOL).slice(0, PICK));
+    idx = 0; answers = []; active = true;
+    $("qtext").classList.remove("on"); $("btn-show").textContent = "👁 Soruyu yazılı gör";
+    show("s-call");
+    t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
+    setStatus("Bağlanıyor…");
+    await new Promise(r => setTimeout(r, 1200));
+    ask(idx);
+  }
+
+  async function answerDone() {
+    $("btn-done").disabled = true; $("btn-repeat").disabled = true;
+    answers.push({ q: questions[idx], a: stopListening() });
+    idx++;
+    if (idx < questions.length) {
+      setStatus("…");
+      await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);
+      ask(idx);
+    } else {
+      setStatus("Görevli konuşuyor…");
+      await say(CLOSING);
+      endCall();
+    }
+  }
+
+  function endCall() {
+    active = false; stopListening(); if (synth) synth.cancel();
+    clearInterval(timerId);
+    const secs = Math.floor((Date.now() - t0) / 1000);
+    $("result-meta").textContent = `${answers.length} soru cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
+    const box = $("answers"); box.innerHTML = "";
+    if (!answers.length) box.innerHTML = '<p class="muted">Hiç soru cevaplanmadı.</p>';
+    answers.forEach((x, i) => {
+      const words = x.a ? x.a.split(/\s+/).length : 0;
+      const d = document.createElement("div"); d.className = "ans";
+      const q = document.createElement("div"); q.className = "q"; q.textContent = `${i + 1}. ${x.q}`;
+      const a = document.createElement("div"); a.className = "a" + (x.a ? "" : " empty");
+      a.textContent = x.a ? "“" + x.a + "”" : (SR ? "(cevap duyulmadı)" : "(yazıya dökme bu tarayıcıda yok)");
+      d.append(q, a);
+      // Kisisel bilgi sorulari (ad, memleket) kisa olabilir; digerleri icin uzunluk ipucu
+      if (SR && i >= OPENING.length) {
+        const h = document.createElement("div");
+        if (words < 12) { h.className = "tip"; h.textContent = `İpucu: ${words} kelime – biraz kısa. Bir “because…” ve bir örnek ekleyin.`; }
+        else { h.className = "ok"; h.textContent = `${words} kelime – güzel uzunluk.`; }
+        d.append(h);
+      }
+      box.append(d);
+    });
+    show("s-result");
+  }
+
+  $("btn-start").onclick = startCall;
+  $("btn-again").onclick = startCall;
+  $("btn-done").onclick = answerDone;
+  $("btn-hangup").onclick = endCall;
+  $("btn-repeat").onclick = async () => {
+    stopListening();
+    $("btn-done").disabled = true; $("btn-repeat").disabled = true;
+    setStatus("Görevli tekrar ediyor…");
+    await say("Of course. " + questions[idx]);
+    if (!active) return;
+    setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
+    $("btn-done").disabled = false; $("btn-repeat").disabled = false;
+    startListening();
+  };
+  $("btn-show").onclick = () => {
+    const on = $("qtext").classList.toggle("on");
+    $("btn-show").textContent = on ? "🙈 Yazıyı gizle" : "👁 Soruyu yazılı gör";
+  };
+})();
+</script>
+</body>
+</html>
