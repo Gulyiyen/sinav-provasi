@@ -13,7 +13,7 @@
   const $ = id => document.getElementById(id);
   const typeOf = x => x.t || "mcq";
 
-  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
+  const show = (id, how) => window.showScreen(id, how);  // ortak gecis: telefonun geri tusu calissin
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
   // Bu telefonda sorulmus sorular hatirlanir; bir turun havuzu bitince o tur bastan baslar
@@ -140,7 +140,7 @@
       const r = document.createElement("div"); r.className = "ref"; r.textContent = `📖 Bölüm ${x.s}: ${SECTIONS[x.s]}`;
       d.append(q, a, c, e, r); box.append(d);
     });
-    show("s-seru-result");
+    show("s-seru-result", "replace");
   }
 
   $("seru-practice").onclick = () => start("practice");
@@ -153,5 +153,7 @@
     $("seru-trbtn").textContent = t.hidden ? "🇹🇷 Türkçesini göster" : "🇹🇷 Türkçesini gizle";
   };
   $("seru-count").textContent = BANK.length;
+  // Sinavdan geri tusuyla cikilirsa sayac dursun (yoksa sure bitince sonuc ekrani kendiliginden acilirdi)
+  window.addEventListener("screenleave", e => { if (e.detail === "s-seru-q") clearInterval(timerId); });
   window.__seru = { start, finish, state: () => ({ mode, qs, idx, picks }) };  // test icin
 })();

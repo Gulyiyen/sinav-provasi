@@ -702,7 +702,30 @@
     return pick;
   }
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
+  // ---- Ekran gecisleri + telefonun GERI tusu ----
+  // Her ekran tarayici gecmisine yazilir: geri tusu siteden cikmak yerine bir onceki ekrana doner.
+  // how="replace": sonuc ekranlari soru ekraninin yerine yazilir (geri -> bolum girisi, eski soruya degil).
+  // Akis ekranlarina (arama, soru, rota) geri/ileri ile donulmez; bolum girisine gidilir.
+  const FLOW_PARENT = { "s-call": "s-intro", "s-seru-q": "s-seru-intro", "s-topo-q": "s-topo-intro", "s-route": "s-topo-intro" };
+  let cur = "s-home";
+  function show(id, how) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+    window.scrollTo(0, 0);
+    try {
+      if (how === "replace") history.replaceState({ s: id }, "");
+      else if (how !== "nohistory" && id !== cur) history.pushState({ s: id }, "");
+    } catch (_) {}
+    const from = cur; cur = id;
+    if (from !== id) window.dispatchEvent(new CustomEvent("screenleave", { detail: from }));
+  }
+  window.showScreen = show;
+  try { history.replaceState({ s: "s-home" }, ""); } catch (_) {}
+  window.addEventListener("popstate", e => {
+    if (cur === "s-call" && active) { endCall(); return; }  // geri = aramayi bitir, sonuclari goster
+    let to = (e.state && e.state.s) || "s-home";
+    if (FLOW_PARENT[to]) to = FLOW_PARENT[to];
+    show(to, "nohistory");
+  });
   function setStatus(html, cls) { const s = $("status"); s.innerHTML = html; s.className = "status" + (cls ? " " + cls : ""); }
   function tick() { const s = Math.floor((Date.now() - t0) / 1000); $("timer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
 
@@ -759,6 +782,7 @@
     t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
     setStatus("Bağlanıyor…");
     await new Promise(r => setTimeout(r, 1200));
+    if (!active) return;  // baglanirken kapatildi
     if (again && mode === "p1") { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
     ask(idx);
   }
@@ -812,7 +836,7 @@
       box.append(d);
     });
     preloadClips(answers.map(x => SAMPLE[x.q]).filter(Boolean));
-    show("s-result");
+    show("s-result", "replace");
   }
 
   $("btn-start").onclick = () => startCall(false, "p1");
@@ -838,6 +862,7 @@
   };
   // Menu gecisleri
   document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
+  window.__prova = { CLIPS, key, SAMPLE, POOL, OPENING, RP };  // test icin: her cumlenin ses dosyasi var mi
 })();
 </script>
 <script src="seru-data.js"></script>

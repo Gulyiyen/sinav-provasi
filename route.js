@@ -235,8 +235,9 @@
 
   function startRoutes(m) {
     mode = m;
+    if (!window.L) { alert("Harita yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin."); return; }
     $("route-status").textContent = "Harita yükleniyor…";
-    show("s-route");
+    if (document.querySelector(".screen.on").id !== "s-route") show("s-route");  // "Yeni rota": ayni ekran, gecmise yazma
     loadGraph().then(() => {
       const kinds = m === "exam" ? ["short", "closed", "long"] : [m];
       qs = kinds.map(makeQuestion).filter(Boolean);
@@ -244,7 +245,7 @@
       ensureMap(); render();
     }).catch(() => { $("route-status").textContent = "Harita verisi yüklenemedi. İnternet bağlantınızı kontrol edin."; });
   }
-  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
+  const show = (id, how) => window.showScreen(id, how);  // ortak gecis: telefonun geri tusu calissin
 
   function render() {
     const q = qs[qi];
@@ -339,7 +340,7 @@
       res.items.filter(i => i[0] === "no").forEach(i => { const p = document.createElement("div"); p.className = "tip"; p.textContent = "✗ " + i[1]; d.append(p); });
       box.append(d);
     });
-    show("s-route-result");
+    show("s-route-result", "replace");
   }
 
   $("route-short").onclick = () => startRoutes("short");

@@ -16,7 +16,7 @@
                 long: { compass: 4, grid: 4, street: 4, road: 3, sign: 3, tf: 2 } };
   const COLS = "ABCD", N = 4;
 
-  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); window.scrollTo(0, 0); }
+  const show = (id, how) => window.showScreen(id, how);  // ortak gecis: telefonun geri tusu calissin
   function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   const rnd = a => a[Math.floor(Math.random() * a.length)];
 
@@ -286,7 +286,7 @@
       const e = document.createElement("div"); e.className = "sample"; e.textContent = (x.trOpt ? `(${x.trOpt}) ` : "") + x.e;
       d.append(q, a, c, e); box.append(d);
     });
-    show("s-topo-result");
+    show("s-topo-result", "replace");
   }
 
   $("topo-practice").onclick = () => start("practice");
