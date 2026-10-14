@@ -14,9 +14,9 @@
   // Isaret bir kavsak degil bir YER: yerin cevresindeki her kavsak baslangic/varis sayilir.
   // (Tek kavsaga oturtunca Piccadilly Circus gibi tek yonlu meydanlarda 'en iyi rota' meydani dolasiyordu.)
   const R_START = 80, R_END = 100;
-  // Isaretten uzakta baslamak/bitmek, o mesafeyi SURMEKTEN 3 kat pahali: rota yerin onunde biter. (1 kat iken son
+  // Isaretten uzakta baslamak/bitmek, o mesafeyi SURMEKTEN 6 kat pahali: rota yerin onunde biter. (1 kat iken son
   // 90 m'yi surmekle 90 m uzakta durmak esit sayiliyordu ve rotalar hedefin ~90 m onunde bitiyordu.)
-  const GAP_W = 3;
+  const GAP_W = 6;
   // En yakin yolu bundan uzak olan yer (bina/park ortasi) rota sorusunda kullanilmaz: rota nerede bitecek belirsiz
   const MAX_ROAD_GAP = 130;
   let G = null, map = null, layers = null, signLayer = null;
@@ -41,6 +41,52 @@
       return { a, b, ow, minor: !!minor, name: R.names[name], len, pts };
     });
     G = { nodes, edges, adj, banned: new Set(R.banned.map(([x, y]) => x + "," + y)), signs: R.signs };
+    addDoors();
+  }
+  // Yol aginda yalnizca KAVSAKLAR var. Covent Garden istasyonu gibi iki kavsagin ortasindaki bir yer icin rota en yakin
+  // kavsakta (~100 m otede) bitiyordu. Her yerin onundeki yola, kapinin tam karsisina bir "durak noktasi" eklenir:
+  // yol orada ikiye bolunur (tek yon, ad, donus yasaklari korunur). Iki yonlu ayri seritli yollarda iki serit de bolunur.
+  function addDoors() {
+    const P = (window.TOPO_GEO && window.TOPO_GEO.places) || [];
+    const lat = G.nodes.map(n => n[0]), lng = G.nodes.map(n => n[1]);
+    const inBox = p => p[0] > Math.min(...lat) && p[0] < Math.max(...lat) && p[1] > Math.min(...lng) && p[1] < Math.max(...lng);
+    P.filter(pl => inBox(pl.p)).forEach(pl => {
+      const kx = 111320 * Math.cos(pl.p[0] * Math.PI / 180), ky = 110540;
+      const xy = q => [(q[1] - pl.p[1]) * kx, (q[0] - pl.p[0]) * ky];
+      const cands = [];
+      G.edges.forEach((E, e) => {
+        let best = null;
+        for (let k = 0; k + 1 < E.pts.length; k++) {
+          const [x1, y1] = xy(E.pts[k]), [x2, y2] = xy(E.pts[k + 1]), dx = x2 - x1, dy = y2 - y1, L2 = dx * dx + dy * dy;
+          const t = L2 ? Math.max(0, Math.min(1, -(x1 * dx + y1 * dy) / L2)) : 0;
+          const d = Math.hypot(x1 + t * dx, y1 + t * dy);
+          if (!best || d < best.d) best = { e, k, t, d };
+        }
+        if (best) cands.push(best);
+      });
+      cands.sort((x, y) => x.d - y.d);
+      if (!cands.length || cands[0].d > MAX_ROAD_GAP) return;
+      cands.filter(c => c.d <= cands[0].d + 15).slice(0, 2).forEach(c => split(c));
+    });
+  }
+  function split({ e, k, t }) {
+    const E = G.edges[e];
+    const A = E.pts[k], B = E.pts[k + 1], P = [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t];
+    const p1 = E.pts.slice(0, k + 1).concat([P]), p2 = [P].concat(E.pts.slice(k + 1));
+    const plen = pts => pts.slice(1).reduce((s, q, i) => s + meters(pts[i], q), 0);
+    const l1 = plen(p1), l2 = plen(p2);
+    if (l1 < 12 || l2 < 12) return;  // kavsaga cok yakin: kavsagin kendisi yeterli
+    const v = G.nodes.length, e2 = G.edges.length, b = E.b;
+    G.nodes.push(P); G.adj.push([e, e2]);
+    G.edges.push({ a: v, b, ow: E.ow, minor: E.minor, name: E.name, len: E.len * l2 / (l1 + l2), pts: p2 });
+    Object.assign(E, { b: v, len: E.len * l1 / (l1 + l2), pts: p1 });
+    G.adj[b] = G.adj[b].map(x => (x === e ? e2 : x));
+    // b kavsagindaki donus yasaklari artik yeni parcaya ait
+    [...G.banned].forEach(key => {
+      const [x, y] = key.split(",").map(Number);
+      if (x === e && G.adj[b].includes(y) && y !== e2) { G.banned.delete(key); G.banned.add(e2 + "," + y); }
+      if (y === e && G.adj[b].includes(x) && x !== e2) { G.banned.delete(key); G.banned.add(x + "," + e2); }
+    });
   }
   const other = (e, n) => (G.edges[e].a === n ? G.edges[e].b : G.edges[e].a);
   const legal = (e, from) => { const E = G.edges[e]; return E.ow === 0 || (E.ow === 1 ? E.a === from : E.b === from); };
@@ -128,9 +174,17 @@
       G.nodes.forEach((n, i) => { const d = meters(n, p.p); if (d < bd) { bd = d; best = i; } });
       // Yer yoldan uzaksa (bina ortasi, ornegin British Museum): en yakin kavsak + 60 m icindekiler
       const rs = Math.max(R_START, bd + 60), re = Math.max(R_END, bd + 60);
+      if (bd > MAX_ROAD_GAP) return null;
+      // Bina/meydan ortasi yoldan uzaksa (British Museum, Waterloo, Westminster Abbey) isaret binanin onundeki yola,
+      // "kapiya" konur: rota isarette biter, isaret binanin ortasinda kalip rota "erken bitmis" gorunmez
+      if (bd > 40) {
+        const door = G.nodes[best], w = r => G.nodes.map((n, i) => i).filter(i => meters(G.nodes[i], door) <= r);
+        const gap = ids => new Map(ids.map(i => [i, GAP_W * meters(G.nodes[i], door)]));
+        return { n: p.n, k: p.k, p: door, bd: 0, rs: R_START, re: R_END, starts: gap(w(R_START)), ends: gap(w(R_END)) };
+      }
       const gap = ids => new Map(ids.map(i => [i, GAP_W * meters(G.nodes[i], p.p)]));
       return { n: p.n, k: p.k, p: p.p, bd, rs, re, starts: gap(within(rs)), ends: gap(within(re)) };
-    }).filter(p => p.bd <= MAX_ROAD_GAP);
+    }).filter(Boolean);
   }
   const rnd = a => a[Math.floor(Math.random() * a.length)];
   function makeQuestion(kind) {
@@ -201,8 +255,11 @@
       // Yeşilden kırmızıya tamamlanmamış rota: kısalığı "direkt" sayılamaz
       ded(false, "", `Rota yeşilden kırmızıya tamamlanmadığı için en direkt rota olarak değerlendirilemedi (en direkt yasal rota ${bm} m).`, 10);
     } else {
+      // Puanlamada isarete uzaklik GERCEK metreyle sayilir (GAP_W yalnizca en iyi rotayi kapiya goturmek icin);
+      // erken durmanin cezasi yukaridaki -2
+      const gapM = (n, P) => meters(G.nodes[n], P.p);
       // Isaretten uzakta baslayip/bitmek de "yol" sayilir: 90 m erken biten rota 90 m eksik degil, o kadar eksik
-      const ratio = (stepCost(steps) + GAP_W * (meters(G.nodes[first], q.A.p) + meters(G.nodes[last], q.B.p))) / q.best.total;
+      const ratio = (stepCost(steps) + gapM(first, q.A) + gapM(last, q.B)) / (q.best.cost + gapM(q.best.steps[0].from, q.A) + gapM(lastNode(q.best.steps), q.B));
       // %12'ye kadar uzun rota tam puan: ana yolu kullanan makul alternatif cezalanmasin
       const d = ratio <= 1.12 ? 0 : Math.min(10, Math.ceil((ratio - 1.12) / 0.04));
       ded(d === 0, `Rota direkt: ${um} m (en kısa yasal rota ${bm} m).`, `Rota en direkt değil: ${um} m, en direkt yasal rota ${bm} m (%${Math.round((ratio - 1) * 100)} daha uzun).`, d);
