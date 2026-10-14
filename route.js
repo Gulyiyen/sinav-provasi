@@ -14,6 +14,11 @@
   // Isaret bir kavsak degil bir YER: yerin cevresindeki her kavsak baslangic/varis sayilir.
   // (Tek kavsaga oturtunca Piccadilly Circus gibi tek yonlu meydanlarda 'en iyi rota' meydani dolasiyordu.)
   const R_START = 80, R_END = 100;
+  // Isaretten uzakta baslamak/bitmek, o mesafeyi SURMEKTEN 3 kat pahali: rota yerin onunde biter. (1 kat iken son
+  // 90 m'yi surmekle 90 m uzakta durmak esit sayiliyordu ve rotalar hedefin ~90 m onunde bitiyordu.)
+  const GAP_W = 3;
+  // En yakin yolu bundan uzak olan yer (bina/park ortasi) rota sorusunda kullanilmaz: rota nerede bitecek belirsiz
+  const MAX_ROAD_GAP = 130;
   let G = null, map = null, layers = null, signLayer = null;
 
   // --- Veri ---
@@ -49,19 +54,23 @@
     get size() { return h.length; } }; }
 
   // En direkt YASAL rota: kenar tabanli Dijkstra (donus yasaklari icin gelinen kenar da durumun parcasi)
+  // sources/targets: Map(kavsak -> isarete kus ucusu uzaklik). Bu "yurume payi" maliyete eklenir: rota isaretin
+  // DIBINDE baslar/biter, 100 m'lik bolgenin kenarinda degil. (Eskiden varis bolgesine ilk girilen kavsakta bitiyordu.)
   function bestRoute(sources, targets, closed) {
     const dist = new Map(), prev = new Map(), H = Heap();
     const key = (e, n) => e + ">" + n;
-    sources.forEach(s => { dist.set(key(-1, s), 0); H.push(0, [-1, s]); });
+    sources.forEach((g, s) => { dist.set(key(-1, s), g); H.push(g, [-1, s]); });
     while (H.size) {
-      const [c, [ein, n]] = H.pop();
+      const [c, [ein, n, fin]] = H.pop();
       const k = key(ein, n);
-      if (c > dist.get(k)) continue;
-      if (targets.has(n)) {
+      if (fin) {
         const path = []; let cur = k;
         while (prev.has(cur)) { const p = prev.get(cur); path.push(p.step); cur = p.from; }
-        return { steps: path.reverse(), cost: c };
+        const steps = path.reverse();
+        return { steps, cost: stepCost(steps), total: c };
       }
+      if (c > dist.get(k)) continue;
+      if (targets.has(n)) H.push(c + targets.get(n), [ein, n, true]);
       for (const e of G.adj[n]) {
         if (closed && closed.has(e)) continue;
         if (!legal(e, n)) continue;
@@ -105,6 +114,7 @@
   }
   const stepLen = steps => steps.reduce((a, s) => a + G.edges[s.e].len, 0);
   const stepCost = steps => steps.reduce((a, s) => a + G.edges[s.e].len * (G.edges[s.e].minor ? MINOR_COST : 1), 0);
+  const lastNode = st => { const s = st[st.length - 1], E = G.edges[s.e]; return E.a === s.from ? E.b : E.a; };
   const stepPts = s => { const E = G.edges[s.e]; return E.a === s.from ? E.pts : E.pts.slice().reverse(); };
 
   // --- Soru uretimi ---
@@ -118,8 +128,9 @@
       G.nodes.forEach((n, i) => { const d = meters(n, p.p); if (d < bd) { bd = d; best = i; } });
       // Yer yoldan uzaksa (bina ortasi, ornegin British Museum): en yakin kavsak + 60 m icindekiler
       const rs = Math.max(R_START, bd + 60), re = Math.max(R_END, bd + 60);
-      return { n: p.n, p: p.p, rs, re, starts: within(rs), ends: within(re) };
-    });
+      const gap = ids => new Map(ids.map(i => [i, GAP_W * meters(G.nodes[i], p.p)]));
+      return { n: p.n, k: p.k, p: p.p, bd, rs, re, starts: gap(within(rs)), ends: gap(within(re)) };
+    }).filter(p => p.bd <= MAX_ROAD_GAP);
   }
   const rnd = a => a[Math.floor(Math.random() * a.length)];
   function makeQuestion(kind) {
@@ -129,7 +140,7 @@
       const A = rnd(P), B = rnd(P);
       if (A === B || meters(A.p, B.p) < 500) continue;
       if (A.n.split(" ")[0] === B.n.split(" ")[0]) continue;  // "Marble Arch" / "Marble Arch station" gibi
-      const r = bestRoute(A.starts, new Set(B.ends));
+      const r = bestRoute(A.starts, B.ends);
       if (!r) continue;
       const L = stepLen(r.steps);
       if (L < lo || L > hi) continue;
@@ -144,8 +155,8 @@
         const closed = new Set(G.edges.map((E, i) => E.name === name ? i : -1).filter(i => i >= 0));
         // Kapali yol baslangic/varis bolgesine degmesin
         const touches = n => G.adj[n].some(e => closed.has(e));
-        if (A.starts.some(touches) || B.ends.some(touches)) continue;
-        const r2 = bestRoute(A.starts, new Set(B.ends), closed);
+        if ([...A.starts.keys()].some(touches) || [...B.ends.keys()].some(touches)) continue;
+        const r2 = bestRoute(A.starts, B.ends, closed);
         if (!r2 || stepLen(r2.steps) > L * 2) continue;
         Object.assign(q, { best: r2, closed, closedName: name });
       }
@@ -171,6 +182,10 @@
     else {
       ded(atA(first), "Başlangıç doğru (yeşil işaret).", "Rota yeşil işaretten başlamıyor.", 4);
       ded(atB(last), "Bitiş doğru (kırmızı işaret).", "Rota kırmızı işarette bitmiyor.", 4);
+      // Bolgenin icinde ama hedefin kapisina gelmeden durmak: en direkt rotanin bittigi yere gore olculur
+      // (bazi yerler yoldan uzak; ornegin Waterloo istasyonunun ortasina 120 m'den yakin yol yok)
+      const short = Math.round(meters(G.nodes[last], q.B.p) - meters(G.nodes[lastNode(q.best.steps)], q.B.p));
+      if (atB(last) && short > 50) ded(false, "", `Rota hedefe varmadan bitiyor: kırmızı işaretin önüne gelmeden ${short} m erken durdunuz.`, 2);
     }
     steps.forEach((s, i) => {
       if (!legal(s.e, s.from)) out.wrongWay.push(s.e);
@@ -186,7 +201,8 @@
       // Yeşilden kırmızıya tamamlanmamış rota: kısalığı "direkt" sayılamaz
       ded(false, "", `Rota yeşilden kırmızıya tamamlanmadığı için en direkt rota olarak değerlendirilemedi (en direkt yasal rota ${bm} m).`, 10);
     } else {
-      const ratio = stepCost(steps) / q.best.cost;
+      // Isaretten uzakta baslayip/bitmek de "yol" sayilir: 90 m erken biten rota 90 m eksik degil, o kadar eksik
+      const ratio = (stepCost(steps) + GAP_W * (meters(G.nodes[first], q.A.p) + meters(G.nodes[last], q.B.p))) / q.best.total;
       // %12'ye kadar uzun rota tam puan: ana yolu kullanan makul alternatif cezalanmasin
       const d = ratio <= 1.12 ? 0 : Math.min(10, Math.ceil((ratio - 1.12) / 0.04));
       ded(d === 0, `Rota direkt: ${um} m (en kısa yasal rota ${bm} m).`, `Rota en direkt değil: ${um} m, en direkt yasal rota ${bm} m (%${Math.round((ratio - 1) * 100)} daha uzun).`, d);
@@ -231,16 +247,28 @@
     map.on("zoomend", vis);
     map.on("click", ev => tap(ev.latlng));
   }
-  const pin = (color, label) => L.divIcon({ className: "", iconSize: [28, 28], iconAnchor: [14, 14], html: `<div class="pin" style="background:${color};width:28px;height:28px;line-height:22px">${label}</div>` });
+  // Damla bicimli isaret: UCU yerin tam ustunde. Yerin kendisi (istasyon simgesi) altinda gorunur kalir.
+  const pin = (color, label) => L.divIcon({ className: "", iconSize: [30, 40], iconAnchor: [15, 40], html: `<div class="dpin" style="--c:${color}"><b>${label}</b></div>` });
+  const ROUNDEL = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#dc241f" stroke-width="4.5"/><rect x="1" y="9.5" width="22" height="5" fill="#0019a8"/></svg>`;
+  const placeIcon = P => L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: P.k === "station" ? ROUNDEL : `<div class="pdot"></div>` });
 
+  const isExam = () => mode.startsWith("exam");
+  let lastExam = "exam";
   function startRoutes(m) {
-    mode = m;
+    mode = m; if (m.startsWith("exam")) lastExam = m;
     if (!window.L) { alert("Harita yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin."); return; }
     $("route-status").textContent = "Harita yükleniyor…";
     if (document.querySelector(".screen.on").id !== "s-route") show("s-route");  // "Yeni rota": ayni ekran, gecmise yazma
     loadGraph().then(() => {
-      const kinds = m === "exam" ? ["short", "closed", "long"] : [m];
-      qs = kinds.map(makeQuestion).filter(Boolean);
+      // "exam" = gercek sinav (3 rota); "exam9" = uzun prova, her turden 3 rota
+      const kinds = m === "exam" ? ["short", "closed", "long"] : m === "exam9" ? ["short", "closed", "long", "short", "closed", "long", "short", "closed", "long"] : [m];
+      qs = [];
+      kinds.forEach(k => {  // ayni prova icinde ayni yer cifti tekrar etmesin
+        for (let t = 0; t < 8; t++) {
+          const q = makeQuestion(k);
+          if (q && (t === 7 || !qs.some(x => x.A.n === q.A.n && x.B.n === q.B.n))) { qs.push(q); break; }
+        }
+      });
       qi = 0; results = [];
       ensureMap(); render();
     }).catch(() => { $("route-status").textContent = "Harita verisi yüklenemedi. İnternet bağlantınızı kontrol edin."; });
@@ -250,13 +278,13 @@
   function render() {
     const q = qs[qi];
     taps = []; steps = []; hops = []; done = false;
-    $("route-progress").textContent = mode === "exam" ? `Rota ${qi + 1} / ${qs.length} · ${KIND_TR[q.kind]}` : KIND_TR[q.kind];
+    $("route-progress").textContent = isExam() ? `Rota ${qi + 1} / ${qs.length} · ${KIND_TR[q.kind]}` : KIND_TR[q.kind];
     $("route-q").textContent = q.q;
     $("route-tr").textContent = q.tr; $("route-tr").hidden = true;
     $("route-feedback").hidden = true;
     $("route-next").hidden = true;
     ["route-undo", "route-clear", "route-submit"].forEach(id => { $(id).hidden = false; });
-    map.invalidateSize();
+    map.stop(); map.invalidateSize();  // onceki rotanin harita animasyonu bitmeden dokunus yanlis kavsaga oturmasin
     map.fitBounds([q.A.p, q.B.p], { padding: [40, 40], animate: false });
     draw();
     $("route-status").textContent = "Yeşil işarete dokunarak başlayın, sonra yol boyunca kavşak kavşak dokunun.";
@@ -275,8 +303,16 @@
     steps.forEach(s => L.polyline(stepPts(s), { color: bad.has(s.e) ? "#e5484d" : "#2563eb", weight: 5, opacity: 0.95, interactive: false }).addTo(layers));
     if (res) res.bannedAt.forEach(n => L.circleMarker(G.nodes[n], { radius: 12, color: "#e5484d", weight: 4, fill: false }).addTo(layers));
     taps.forEach(n => L.circleMarker(G.nodes[n], { radius: 4, color: "#2563eb", fillColor: "#fff", fillOpacity: 1, weight: 2, interactive: false }).addTo(layers));
-    L.marker(q.A.p, { icon: pin("#1fb36b", "A"), interactive: false }).bindTooltip(q.A.n, { permanent: true, direction: "top", offset: [0, -14] }).addTo(layers);
-    L.marker(q.B.p, { icon: pin("#e5484d", "B"), interactive: false }).bindTooltip(q.B.n, { permanent: true, direction: "top", offset: [0, -14] }).addTo(layers);
+    if (res) [[q.A, q.best.steps[0].from], [q.B, lastNode(q.best.steps)]].forEach(([P, n]) =>
+      L.polyline([G.nodes[n], P.p], { color: "#1fb36b", weight: 4, opacity: 0.8, dashArray: "4 6", interactive: false }).addTo(layers));
+    // Harita karolari istasyon adlarini bu yakinlikta cogu zaman yazmiyor: istasyonlari kendimiz isaretleriz
+    ((window.TOPO_GEO && window.TOPO_GEO.places) || []).forEach(P => {
+      if (P.k === "station" && P.n !== q.A.n && P.n !== q.B.n) L.marker(P.p, { interactive: false, icon: L.divIcon({ className: "", iconSize: null, html: `<div class="stlab${map.latLngToContainerPoint(P.p).x > map.getSize().x * 0.62 ? " rev" : ""}">${ROUNDEL}${P.n.replace(/ station$/, "")}</div>` }) }).addTo(layers);
+    });
+    [[q.A, "#1fb36b", "A"], [q.B, "#e5484d", "B"]].forEach(([P, c, t]) => {
+      L.marker(P.p, { icon: placeIcon(P), interactive: false }).addTo(layers);
+      L.marker(P.p, { icon: pin(c, t), interactive: false }).bindTooltip(P.n, { permanent: true, direction: "top", offset: [0, -40], className: "plab" }).addTo(layers);
+    });
     $("route-len").textContent = steps.length ? `Çizilen: ${Math.round(stepLen(steps))} m` : "";
   }
 
@@ -320,17 +356,17 @@
     f.append(lg); f.hidden = false;
     ["route-undo", "route-clear", "route-submit"].forEach(id => { $(id).hidden = true; });
     $("route-next").hidden = false;
-    $("route-next").textContent = qi + 1 < qs.length ? "Sonraki rota →" : (mode === "exam" ? "Sonucu gör" : "Yeni rota");
+    $("route-next").textContent = qi + 1 < qs.length ? "Sonraki rota →" : (isExam() ? "Sonucu gör" : "Yeni rota");
     $("route-status").textContent = "";
     // Sonuc tum rotayi gostersin
-    map.fitBounds(L.latLngBounds([].concat(...steps.map(stepPts), ...q.best.steps.map(stepPts))), { padding: [30, 30] });
+    map.fitBounds(L.latLngBounds([].concat(...steps.map(stepPts), ...q.best.steps.map(stepPts))), { padding: [30, 30], animate: false });
   }
   function next() {
     if (qi + 1 < qs.length) { qi++; render(); window.scrollTo(0, 0); return; }
-    if (mode !== "exam") { startRoutes(mode); return; }
+    if (!isExam()) { startRoutes(mode); return; }
     const tot = results.reduce((a, r) => a + r.res.pts, 0);
     $("route-score").textContent = `Rota puanı: ${tot} / ${MAX * results.length}`;
-    $("route-verdict").textContent = `Gerçek sınavda rota soruları 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`;
+    $("route-verdict").textContent = (results.length > 3 ? `Ortalama: rota başına ${(tot / results.length).toFixed(1)} / ${MAX}. ` : "") + `Gerçek sınavda 3 rota var ve 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`;
     const box = $("route-sum"); box.innerHTML = "";
     results.forEach(({ q, res }) => {
       const d = document.createElement("div"); d.className = "ans";
@@ -347,11 +383,12 @@
   $("route-closed").onclick = () => startRoutes("closed");
   $("route-long").onclick = () => startRoutes("long");
   $("route-exam").onclick = () => startRoutes("exam");
-  $("route-again").onclick = () => startRoutes("exam");
+  $("route-exam9").onclick = () => startRoutes("exam9");
+  $("route-again").onclick = () => startRoutes(lastExam);
   $("route-undo").onclick = undo;
   $("route-clear").onclick = () => { if (!done) { taps = []; steps = []; hops = []; draw(); } };
   $("route-submit").onclick = submit;
   $("route-next").onclick = next;
   $("route-trbtn").onclick = () => { const t = $("route-tr"); t.hidden = !t.hidden; };
-  window.__route = { start: startRoutes, tap, submit, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, map: () => map };  // test icin
+  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, map: () => map };  // test icin
 })();

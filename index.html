@@ -130,6 +130,14 @@
   .signsm { width: 70px; height: 70px; background: #fff; border-radius: 8px; padding: 4px; margin: 6px 0; }
   .signbox svg, .signsm svg { width: 100%; height: 100%; display: block; }
   #route-map { height: 58vh; min-height: 340px; border-radius: 14px; border: 1px solid var(--line); background: #dfe6ea; }
+  .dpin { position: relative; width: 30px; height: 40px; }
+  .dpin::before { content: ""; position: absolute; left: 1px; top: 0; width: 28px; height: 28px; background: var(--c); border: 3px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .dpin b { position: absolute; left: 0; top: 4px; width: 30px; text-align: center; color: #fff; font: 700 13px/20px system-ui, sans-serif; }
+  .pdot { width: 12px; height: 12px; margin: 2px; border-radius: 50%; background: #111; border: 2px solid #fff; box-sizing: border-box; }
+  .plab { font: 700 13px/16px system-ui, sans-serif; padding: 2px 6px; }
+  .stlab { transform: translate(-8px, -8px); display: flex; align-items: center; gap: 3px; white-space: nowrap; font: 600 11px/14px system-ui, sans-serif; color: #0019a8; text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff; pointer-events: none; }
+  .stlab svg { flex: none; }
+  .stlab.rev { flex-direction: row-reverse; transform: translate(calc(-100% + 8px), -8px); }  /* sag kenarda: ad simgenin soluna */
   .rsign svg { display: block; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
   .closedlab { transform: translate(-50%, -150%); background: #d0021b; color: #fff; font: 700 13px/20px system-ui, sans-serif; padding: 0 6px; border-radius: 4px; white-space: nowrap; }
   .rowbtn { display: flex; gap: 8px; margin-top: 8px; }
@@ -310,12 +318,13 @@
     <div class="spacer"></div>
     <button class="big blue" id="topo-practice">⚡ Hızlı alıştırma – 10 soru</button>
     <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
-    <button class="big green" id="topo-long">📝 Uzun prova – 20 soru</button>
+    <button class="big green" id="topo-long">📝 Uzun prova – 50 soru</button>
     <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Açıklamalar sonda</p>
 
     <h2>🧭 Rota çizme (66 puan)</h2>
     <p class="muted" style="font-size:15px;margin-top:0">Haritada yeşilden kırmızıya en direkt rotayı çizin. Tek yönler, yasak dönüşler ve kapalı yol gerçek Londra verisinden kontrol edilir.</p>
-    <button class="big green" id="route-exam">📝 3 rotalık prova (kısa, yol kapalı, uzun)</button>
+    <button class="big green" id="route-exam">📝 Sınav provası – 3 rota (gerçek sınav gibi)</button>
+    <button class="big blue" id="route-exam9">📚 Uzun prova – 9 rota (3 kısa, 3 yol kapalı, 3 uzun)</button>
     <div class="rowbtn">
       <button class="small" id="route-short">Kısa rota</button>
       <button class="small" id="route-closed">Yol kapalı</button>

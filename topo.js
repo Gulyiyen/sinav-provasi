@@ -13,7 +13,7 @@
     road: "Yol numarası", sign: "İşaretler", tf: "Rota planlama – doğru mu, yanlış mı?"
   };
   const MIX = { practice: { compass: 2, grid: 2, street: 2, road: 1, sign: 2, tf: 1 },
-                long: { compass: 4, grid: 4, street: 4, road: 3, sign: 3, tf: 2 } };
+                long: { compass: 10, grid: 10, street: 10, road: 8, sign: 7, tf: 5 } };  // 50 soru
   const COLS = "ABCD", N = 4;
 
   const show = (id, how) => window.showScreen(id, how);  // ortak gecis: telefonun geri tusu calissin
@@ -74,7 +74,7 @@
       tr: `Haritadaki kareleri kullanarak: ${P.n} hangi karede?`,
       o: opts(right, near),
       e: `Önce harfe (üstteki sütun: A–D), sonra rakama (soldaki satır: 1–4) bakın. ${P.n} → ${COLS[c]} sütunu, ${r + 1}. satır = ${right}. Haritada istasyonlar adıyla yazılır; adı arayın.`,
-      map: { type: "grid", p: P, c, r, fx: 0.25 + Math.random() * 0.5, fy: 0.25 + Math.random() * 0.5 }
+      map: { type: "grid", p: P, c, r, fx: 0.2 + Math.random() * 0.3, fy: 0.25 + Math.random() * 0.45 }
     };
   }
 
@@ -129,7 +129,9 @@
 
   function build(mode) {
     const m = MIX[mode], out = [];
-    const many = (f, n) => { for (let i = 0; i < n; i++) { const x = f(); if (x) out.push(x); } };
+    // Ayni soru (ayni metin + ayni dogru cevap) bir provada iki kez cikmasin
+    const seen = new Set();
+    const many = (f, n) => { for (let i = 0, t = 0; i < n && t < n * 6; t++) { const x = f(); if (!x || seen.has(x.q + "|" + x.o[0])) continue; seen.add(x.q + "|" + x.o[0]); out.push(x); i++; } };
     if (HAS_MAP && GEO.places.length) {
       many(genCompass, m.compass); many(genGrid, m.grid); many(genStreet, m.street); many(genRoad, m.road);
     } else {
@@ -155,6 +157,7 @@
     className: "", iconSize: [26, 26], iconAnchor: [13, 13],
     html: `<div class="pin" style="background:${color}">${label || ""}</div>`
   });
+  const ROUNDEL = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#dc241f" stroke-width="4.5"/><rect x="1" y="9.5" width="22" height="5" fill="#0019a8"/></svg>`;
   let homeView = null;
   function drawMap(x) {
     const box = $("topo-mapbox");
@@ -200,6 +203,13 @@
         L.marker([nw.lat + (se.lat - nw.lat) * 0.04, lng(i + 0.5)], { icon: lab(COLS[i]), interactive: false }).addTo(layer);
         L.marker([lat(i + 0.5), nw.lng + (se.lng - nw.lng) * 0.03], { icon: lab(i + 1), interactive: false }).addTo(layer);
       }
+    }
+    // Kare sorusu: istasyon adlari haritada gorunsun (karolar bu yakinlikta cogu istasyonu yazmiyor). Hepsi
+    // isaretlenir, yalnizca sorulan degil: aday adi haritada kendisi bulur, gercek sinavdaki gibi.
+    if (M.type === "grid") {
+      const vb = map.getBounds();
+      GEO.places.filter(p => p.k === "station" && vb.contains(p.p)).forEach(p => L.marker(p.p, { interactive: false,
+        icon: L.divIcon({ className: "", iconSize: null, html: `<div class="stlab${map.latLngToContainerPoint(p.p).x > map.getSize().x * 0.62 ? " rev" : ""}">${ROUNDEL}${p.n.replace(/ station$/, "")}</div>` }) }).addTo(layer));
     }
     homeView = { c: map.getCenter(), z: map.getZoom() };
   }
