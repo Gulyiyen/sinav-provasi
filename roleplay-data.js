@@ -1,4 +1,6 @@
-// B1 Konusma - Bolum 2: rol yapma. Gorevli yolcuyu, aday soforu oynar.
+// B1 Konusma - Bolum 2: rol yapma. Gercek sinavda (LanguageCert Practice Paper 3) iki durum var:
+//   1) gorevli baslatir ("I start.") - ROLEPLAYS; 2) ADAY baslatir ("You start.") - ROLEPLAYS_B.
+// Gercek sinavin durumlari gunluk hayattan (turist, arkadas, komsu, mudur, garson...); sofor durumlari ek pratik.
 // Yapay zeka yok: gorevlinin replikleri sabit, bu yuzden her replik adayin onceki cevabindan bagimsiz anlamli olmali.
 // card = adaya ekranda gosterilen Turkce rol karti; intro = gorevlinin durumu anlattigi giris (ilk replikle birlikte okunur);
 // lines = [gorevlinin repligi, ornek sofor cevabi]. Ornek cevaplar kural iddiasinda el kitabina uygun.
@@ -92,5 +94,115 @@ window.ROLEPLAYS = [
        "I'm afraid not. I could get a fine if I wait there. Please call me when you're ready, and I'll come straight to you."],
       ["Okay, I'll call you as soon as I'm ready. See you soon.",
        "Great, see you soon. Take your time."]
+    ] },
+  // --- Gunluk durumlar (gercek sinavdaki gibi), gorevli baslatir ---
+  { card: "Siz kendi şehrinizdesiniz. Görevli yolunu kaybetmiş bir turist. Ona en yakın istasyona nasıl gideceğini anlatın.",
+    intro: "I'm a tourist in your town. I start.",
+    lines: [
+      ["Excuse me, can you tell me how to get to the nearest station, please?",
+       "Yes, of course. Go straight along this road, then turn left at the traffic lights. The station is on your right, opposite the bank."],
+      ["Thank you. Is it far to walk?",
+       "No, not really. It's about ten minutes on foot. If you're tired, you can take the number 38 bus from the stop over there."]
+    ] },
+  { card: "Görevli arkadaşınız. Sizi pazar günkü bir futbol maçına davet ediyor. Cevap verin ve buluşmayı planlayın.",
+    intro: "We're friends. I start.",
+    lines: [
+      ["I've got two tickets for a football match on Sunday. Would you like to come with me?",
+       "Oh, I'd love to, thank you! I haven't been to a match for a long time. What time does it start?"],
+      ["It starts at three. Shall we meet at the station or at the stadium?",
+       "Let's meet at the station at two o'clock. Then we can get something to eat before the match."]
+    ] },
+  { card: "Görevli komşunuz. Tatile gidiyor ve bitkilerini sulamanızı istiyor. Cevap verin.",
+    intro: "We're neighbours. I start.",
+    lines: [
+      ["I'm going on holiday next week. Could you water my plants while I'm away?",
+       "Yes, of course, no problem. How often do they need water? I don't want to give them too much."],
+      ["Thank you so much! I'll leave my key with you. Is Friday evening okay?",
+       "Friday evening is fine. I'll be home after six o'clock. Have a lovely holiday!"]
+    ] },
+  { card: "Görevli müdürünüz. Cumartesi fazladan çalışmanızı istiyor ama sizin planınız var. Kibarca cevap verin.",
+    intro: "I'm your manager at work. I start.",
+    lines: [
+      ["We're very busy this week. Could you work an extra shift on Saturday?",
+       "I'm sorry, but I can't on Saturday, because it's my son's birthday and we're having a party. I could work another day, though."],
+      ["I understand. What about Sunday morning instead?",
+       "Yes, Sunday morning is fine. I can start at eight o'clock and stay until two, if that helps."]
+    ] },
+  { card: "Görevli arkadaşınız. Yorgun göründüğünüzü söylüyor. Neden yorgun olduğunuzu anlatın.",
+    intro: "We're friends. I start.",
+    lines: [
+      ["You look really tired. Are you okay?",
+       "I'm okay, thanks, just very tired. I worked late every night this week, and I didn't sleep well."],
+      ["Why don't you take a few days off?",
+       "That's a good idea. Maybe I'll take Friday off and have a long weekend. I really need some rest."]
+    ] },
+  { card: "Görevli iş arkadaşınız. Ehliyet almayı düşünüyor ve fikrinizi soruyor. Cevap verin.",
+    intro: "We work together. I start.",
+    lines: [
+      ["I'm thinking of learning to drive. Do you think it's a good idea?",
+       "Yes, I think it's a great idea. You can go wherever you want, and it's very useful when you have a family."],
+      ["How long did it take you to learn?",
+       "It took me about six months. I had a lesson every week, and I practised with my brother at the weekends."]
+    ] }
+];
+
+// --- ADAY BASLATIR ("You start."): gorevli durumu anlatir ve susar; ilk sozu aday soyler ---
+// lines[0][0] = gorevlinin durum cumlesi (konusmayi aday baslatir), lines[1][0] = gorevlinin cevabi.
+window.ROLEPLAYS_B = [
+  { card: "Görevli dişçinin resepsiyonisti. Siz randevu almak için arıyorsunuz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm the receptionist at a dentist's. You're calling to make an appointment. You start.",
+       "Hello, I'd like to make an appointment with the dentist, please. I've had a toothache for two days."],
+      ["Oh, I'm sorry to hear that. Is it very painful, or can you wait until next week?",
+       "It's quite painful, so I'd like to come as soon as possible. Do you have anything tomorrow morning?"]
+    ] },
+  { card: "Görevli bir restoranda garson. Çorbanız soğuk geldi. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm a waiter in a restaurant. Your soup is cold. You start.",
+       "Excuse me, I'm sorry, but my soup is cold. Could you warm it up, please?"],
+      ["Oh, I'm so sorry about that. Would you like me to bring you a new one?",
+       "Yes, please, that would be great. And could I have some more bread too, please?"]
+    ] },
+  { card: "Görevli komşunuz. Raf takmak için matkabını ödünç istiyorsunuz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["We're neighbours. You want to borrow my drill. You start.",
+       "Hi, sorry to bother you. Could I borrow your drill, please? I want to put up some shelves in my kitchen."],
+      ["Sure, no problem. When do you need it?",
+       "This afternoon, if that's okay. I'll bring it back this evening. Thank you very much!"]
+    ] },
+  { card: "Görevli müdürünüz. Çocuğunuz hasta olduğu için yarın işe gelemeyeceksiniz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm your manager. You can't come to work tomorrow, because your child is ill. You start.",
+       "Hello, I'm sorry, but I can't come to work tomorrow. My daughter is ill, and I need to take her to the doctor."],
+      ["Oh, I'm sorry to hear that. Do you think you'll be back on Thursday?",
+       "I hope so. If she feels better, I'll come on Thursday. I'll call you tomorrow evening to let you know."]
+    ] },
+  { card: "Görevli bir mağazada satış görevlisi. Küçük gelen bir ceketi iade etmek istiyorsunuz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm a shop assistant. You want to return a jacket, because it's too small. You start.",
+       "Hello. I bought this jacket last week, but it's too small for me. Can I return it, please?"],
+      ["No problem. Have you got the receipt?",
+       "Yes, here it is. Actually, could I change it for a bigger size instead of getting my money back?"]
+    ] },
+  { card: "Siz şoförsünüz, yolcunun evinin önüne geldiniz ama yolcu dışarıda değil. Onu arıyorsunuz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm your passenger. You've arrived outside my house, but I'm not outside. You call me. You start.",
+       "Hello, this is your driver from the cab company. I've arrived outside your house. I'm in a black Toyota."],
+      ["Oh, sorry! I'm just finishing my breakfast. Can you wait five minutes?",
+       "Yes, that's fine, but I can't wait here because of the yellow lines. I'll wait around the corner. Please call me when you're ready."]
+    ] },
+  { card: "Siz şoförsünüz; yolculuk sırasında yakıt almak için durmanız gerekiyor. Yolcuya söyleyin. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["I'm your passenger. You need to stop for fuel during the journey. You start.",
+       "Excuse me, I'm sorry, but I need to stop for fuel. There's a petrol station just ahead. It will only take a few minutes."],
+      ["Oh, okay. Will this make me late for my train?",
+       "No, don't worry. We have plenty of time. Your train is at four, and we'll arrive at the station at about half past three."]
+    ] },
+  { card: "Görevli arkadaşınız. Onu cumartesi akşamı evinize yemeğe davet etmek istiyorsunuz. Konuşmayı SİZ başlatın.",
+    lines: [
+      ["We're friends. You want to invite me to dinner at your house on Saturday. You start.",
+       "Hi! Are you free on Saturday evening? I'd like to invite you to dinner at my house. I'm going to cook Turkish food."],
+      ["Oh, I'd love to! What time should I come?",
+       "Come at about seven o'clock. You don't need to bring anything, just come hungry!"]
     ] }
 ];

@@ -86,6 +86,9 @@
   .sample { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--blue); background: rgba(59,130,246,.08); border-radius: 8px; font-size: 16px; }
   .rpcard { border-left: 3px solid var(--amber); font-size: 16px; }
   .rpcard b { display: block; margin-bottom: 4px; }
+  .sheetgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .sheetgrid .tile { background: #f4f7fa; color: #10202e; border-radius: 10px; padding: 8px 4px; text-align: center; font-size: 13px; line-height: 1.25; font-weight: 600; }
+  .sheetgrid .emo { font-size: 30px; line-height: 1.2; }
   .tip { color: #ffd58a; font-size: 15px; margin-top: 4px; }
   .ok { color: #7fe0ae; font-size: 15px; margin-top: 4px; }
   /* Ana menu ve SERU */
@@ -174,10 +177,17 @@
     <div class="card warn" id="support-warn" hidden></div>
 
     <div class="spacer"></div>
-    <button class="big green" id="btn-start">📞 Bölüm 1 – Kişisel sorular</button>
+    <button class="big green" id="btn-start-full">🎓 Tam sınav provası – 4 bölüm</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Gerçek sınav gibi, baştan sona yaklaşık 15 dakika</p>
+    <p class="muted" style="text-align:center;font-size:14px;margin:14px 0 0">ya da tek bir bölümü çalışın:</p>
+    <button class="big blue" id="btn-start">📞 Bölüm 1 – Kişisel sorular</button>
     <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Kendiniz, aileniz, işiniz, Londra hakkında 10 soru</p>
     <button class="big blue" id="btn-start-rp">🎭 Bölüm 2 – Rol yapma</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Görevli yolcu olur, siz şoför olursunuz – 2 durum</p>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">2 durum: birini görevli, birini SİZ başlatırsınız</p>
+    <button class="big blue" id="btn-start-p3">🖼 Bölüm 3 – Resimlerle karar verme</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Ekrandaki resimlere bakıp görevliyle birlikte bir plan yapın</p>
+    <button class="big blue" id="btn-start-p4">👂 Bölüm 4 – Dinleme ve kısa konuşma</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Kısa bir metni dinleyip 3 soru cevaplayın, sonra 1,5 dakika bir konu anlatın</p>
     <p class="muted" style="text-align:center;font-size:14px">Telefon sizden mikrofon izni isteyecek – “İzin ver” deyin.</p>
   </section>
 
@@ -381,6 +391,7 @@
 </div>
 
 <script src="roleplay-data.js"></script>
+<script src="part34-data.js"></script>
 <script>
 (() => {
   // ---- Sorular: TfL B1 Speaking & Listening, Bolum 1 (kisisel sorular) ----
@@ -541,17 +552,33 @@
 
   // ---- Kayitli ses (Sonia): her cumle audio/<sira>.mp3; dosya yoksa tarayici sesine duser ----
   // Bolum 2 (rol yapma): ilk replik, gorevlinin durumu anlattigi girisle birlikte tek cumle olarak okunur
-  const RP_FIRST = "Now let's do some role plays. I will be the passenger, and you will be the driver.";
-  const RP_NEXT = "Thank you. Now let's do another role play.";
+  // Gercek sinav: once gorevlinin baslattigi bir durum, sonra ADAYIN baslattigi bir durum (Practice Paper 3)
+  const RP_FIRST = "Now, Part Two. We're going to role-play some situations. Sometimes I'll start, and sometimes you'll start. First situation.";
+  const RP_NEXT = "Thank you. Second situation.";
   const RP_CLOSING = "Thank you. That is the end of the role plays.";
-  const RP_PICK = 2;
   const RP = (window.ROLEPLAYS || []).map(r => ({
     card: r.card,
     lines: r.lines.map((l, k) => ({ q: k === 0 ? r.intro + " " + l[0] : l[0], a: l[1] }))
   }));
-  RP.forEach(r => r.lines.forEach(l => { SAMPLE[l.q] = l.a; }));
-  const RP_TEXTS = RP.flatMap(r => r.lines.map(l => l.q)).concat([RP_FIRST, RP_NEXT, RP_CLOSING]);
-  const CLIPS = RP_TEXTS.concat(POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
+  const RPB = (window.ROLEPLAYS_B || []).map(r => ({ card: r.card, lines: r.lines.map(l => ({ q: l[0], a: l[1] })) }));
+  RP.concat(RPB).forEach(r => r.lines.forEach(l => { SAMPLE[l.q] = l.a; }));
+  const RP_TEXTS = RP.concat(RPB).flatMap(r => r.lines.map(l => l.q)).concat([RP_FIRST, RP_NEXT, RP_CLOSING]);
+  // Bolum 3 (resimlerle birlikte karar) ve Bolum 4 (dinleme + kisa konusma): part34-data.js
+  const P3 = window.PART3 || [], P4A = window.PART4A || [], P4B = window.PART4B || [];
+  const P3_INTRO = "Now, Part Three. In this part of the test, we're going to discuss something together.";
+  const P3_CLOSE = window.PART3_CLOSE || "Thank you.";
+  const p4aIntro = a => `Now, Part Four. I'm going to tell you about ${a.who} and ${a.about}. I'll read it twice. Listen, and then I'll ask you three questions. You can see the questions on your screen.`;
+  const P4A_AGAIN = "Now I'll read it again.", P4A_QS = "Now, the questions.";
+  const p4bIntro = b => `Now you're going to talk on your own for one and a half minutes. Your topic is ${b.topic}. You now have thirty seconds to make some notes.`;
+  const P4B_START = "Please start.", THANKS = "Thank you.";
+  const P4_CLOSE = "Thank you. That is the end of the test.";
+  P3.forEach(t => t.lines.forEach(l => { SAMPLE[l[0]] = l[1]; }));
+  const P34_TEXTS = [P3_INTRO, P3_CLOSE, P4A_AGAIN, P4A_QS, P4B_START, THANKS, P4_CLOSE]
+    .concat(P3.flatMap(t => [t.intro].concat(t.lines.map(l => l[0]))))
+    .concat(P4A.flatMap(a => [p4aIntro(a), a.text].concat(a.qs.map(x => x[0]))))
+    .concat(P4B.flatMap(b => [p4bIntro(b), b.sample].concat(b.follow)));
+  const CLOSE = { p1: CLOSING, p2: RP_CLOSING, p3: P3_CLOSE, p4: P4_CLOSE, full: P4_CLOSE };
+  const CLIPS = RP_TEXTS.concat(P34_TEXTS, OPENING, POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
   const player = new Audio();
   player.preload = "auto";
 
@@ -678,18 +705,22 @@
   }
 
   // ---- Akis ----
+  // Her mod bir "soru" listesine cevrilir; meta[i] o sorudan once olanlari tarif eder:
+  //   prog (ilerleme yazisi), card (ekrandaki kart), pre (once okunacak cumleler; sayi = bekleme ms),
+  //   prep (hazirlik sn), talk (konusma suresi sn), label (sonucta gorunen ad), sample, expect (4A dogru cevap), kind.
   let mode = "p1", meta = [], micAsked = false;
   let questions = [], nOpen = 0, idx = 0, answers = [], timerId = null, t0 = 0, active = false;
+  let talkId = null, skipPrep = null;
 
-  // Rol yapma: sorulan durumlar hatirlanir, hepsi bitince bastan
-  function freshRoleplays(n) {
+  // Bu telefonda gorulenler hatirlanir; hepsi bitince bastan (her bolum ayri)
+  function freshPick(key, all, n) {
     let seen = [];
-    try { seen = JSON.parse(localStorage.getItem("prova-rp-seen") || "[]"); } catch (_) {}
-    let fresh = RP.map((_, i) => i).filter(i => !seen.includes(i));
-    if (fresh.length < n) { seen = []; fresh = RP.map((_, i) => i); }
+    try { seen = JSON.parse(localStorage.getItem(key) || "[]"); } catch (_) {}
+    let fresh = all.map((_, i) => i).filter(i => !seen.includes(i));
+    if (fresh.length < n) { seen = []; fresh = all.map((_, i) => i); }
     const pick = shuffle(fresh).slice(0, n);
-    try { localStorage.setItem("prova-rp-seen", JSON.stringify(seen.concat(pick))); } catch (_) {}
-    return pick.map(i => RP[i]);
+    try { localStorage.setItem(key, JSON.stringify(seen.concat(pick))); } catch (_) {}
+    return pick.map(i => all[i]);
   }
   // Bu telefonda sorulmus sorular hatirlanir; havuz bitince bastan
   function freshQuestions(PICK) {
@@ -728,34 +759,125 @@
   });
   function setStatus(html, cls) { const s = $("status"); s.innerHTML = html; s.className = "status" + (cls ? " " + cls : ""); }
   function tick() { const s = Math.floor((Date.now() - t0) / 1000); $("timer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+  const mmss = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  // Ekrandaki kart: rol karti, Bolum 3 gorev kagidi, Bolum 4A soru listesi, Bolum 4B konu
+  function showCard(c) {
+    const box = $("rpcard"); box.innerHTML = ""; box.className = "card rpcard";
+    const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    if (c.kind === "role") box.append(el("b", null, "🎭 Rol kartınız"), el("span", null, c.text));
+    if (c.kind === "sheet") {
+      box.classList.add("sheet");
+      box.append(el("b", null, "🖼 Görev kâğıdı – " + c.title), el("p", "muted", c.tr));
+      const g = el("div", "sheetgrid");
+      c.items.concat([["❓", "Anything else?"]]).forEach(([e, n]) => { const t = el("div", "tile"); t.append(el("div", "emo", e), el("div", null, n)); g.append(t); });
+      box.append(g);
+    }
+    if (c.kind === "qs") {
+      box.append(el("b", null, "👂 Dinleyin – sonra bu 3 soruyu cevaplayın"));
+      const ol = el("ol", "steps"); c.list.forEach(q => ol.append(el("li", null, q))); box.append(ol);
+      box.append(el("p", "muted", "Görevli metni iki kez okuyacak. Not alabilirsiniz."));
+    }
+    if (c.kind === "topic") {
+      box.append(el("b", null, "🗣 Konunuz: " + c.topic), el("p", "muted", c.tr));
+      box.append(el("p", null, "Not alın: Ne? Nerede / ne zaman? Kiminle? Neden seviyorsunuz? Bir örnek. Nasıl hissettiniz?"));
+    }
+    box.hidden = false;
+  }
+
+  // Hazirlik geri sayimi: sure dolunca ya da "Hazirim"a basinca biter
+  function countdown(sec, label) {
+    return new Promise(resolve => {
+      let left = sec;
+      const done = () => { clearInterval(id); skipPrep = null; $("btn-done").textContent = "✓ Cevabım bitti"; resolve(); };
+      const draw = () => setStatus(`⏳ ${label}: ${left} sn`);
+      draw();
+      const id = setInterval(() => { if (!active) return done(); left--; if (left <= 0) done(); else draw(); }, 1000);
+      skipPrep = done;
+      $("btn-done").textContent = "✓ Hazırım, başlayayım"; $("btn-done").disabled = false;
+    });
+  }
 
   async function ask(i) {
     if (!active) return;
-    const q = questions[i], m = meta[i];
+    const q = questions[i], m = meta[i] || {};
     $("qtext").textContent = q;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
     setStatus("Görevli konuşuyor… dinleyin");
-    if (m) {
-      $("progress").textContent = `Rol ${m.n} / ${RP_PICK} · Replik ${m.k + 1} / ${m.rp.lines.length}`;
-      if (m.k === 0) {
-        const c = $("rpcard"); c.innerHTML = "";
-        const h = document.createElement("b"); h.textContent = "🎭 Rol kartınız";
-        const t = document.createElement("span"); t.textContent = m.rp.card;
-        c.append(h, t); c.hidden = false;
-        await say(m.n === 1 ? RP_FIRST : RP_NEXT);
-        if (!active) return;
-      }
-    } else {
-      $("progress").textContent = `Soru ${i + 1} / ${questions.length}`;
+    $("progress").textContent = m.prog || `Soru ${i + 1} / ${questions.length}`;
+    if (m.card) showCard(m.card);
+    for (const x of m.pre || []) {
+      if (typeof x === "number") await wait(x); else await say(x);
+      if (!active || idx !== i) return;
     }
+    if (m.prep) { await countdown(m.prep, "Hazırlık – not alın"); if (!active || idx !== i) return; $("btn-done").disabled = true; }
     await say(q);
-    if (!active) return;
-    setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
-    $("btn-done").disabled = false; $("btn-repeat").disabled = false;
+    if (!active || idx !== i) return;
+    $("btn-done").disabled = false; $("btn-repeat").disabled = !!m.talk;
     startListening();
+    if (m.talk) {
+      // Bolum 4B: 1,5 dk kesintisiz konusma; sure dolunca gorevli "Thank you" der ve devam eder
+      $("btn-done").textContent = "✓ Konuşmam bitti";
+      let left = m.talk;
+      const draw = () => setStatus(`<span class="mic"></span>Konuşun – kalan ${mmss(left)}`, "listen");
+      draw();
+      clearInterval(talkId);
+      talkId = setInterval(() => {
+        if (!active || idx !== i) { clearInterval(talkId); return; }
+        left--; if (left <= 0) { clearInterval(talkId); answerDone(); } else draw();
+      }, 1000);
+    } else {
+      setStatus('<span class="mic"></span>' + (m.youStart ? "Konuşmayı SİZ başlatın – İngilizce" : "Sıra sizde – İngilizce cevap verin"), "listen");
+    }
   }
 
-  // m: "p1" kisisel sorular, "p2" rol yapma. again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
+  // Modlar: soru listesi + meta uret. "full" = tam sinav provasi, gercek sinavin sirasiyla (11-13 dk).
+  function build(again) {
+    questions = []; meta = []; nOpen = 0;
+    const add = (q, m) => { questions.push(q); meta.push(m); };
+    const P = { full: mode === "full" };
+    const part1 = (n) => {
+      nOpen = again ? 0 : OPENING.length;
+      OPENING.slice(0, nOpen).concat(freshQuestions(n - nOpen)).forEach((q, k, all) =>
+        add(q, { kind: "p1", prog: P.full ? `Bölüm 1 · Soru ${k + 1} / ${all.length}` : null }));
+    };
+    const part2 = () => {
+      const pair = [freshPick("prova-rp-seen", RP, 1)[0], freshPick("prova-rpb-seen", RPB, 1)[0]];
+      pair.forEach((rp, j) => rp.lines.forEach((l, k) => add(l.q, {
+        kind: "p2", prog: `${P.full ? "Bölüm 2 · " : ""}Durum ${j + 1} / 2 · ${j === 0 ? "görevli başlatır" : "SİZ başlatırsınız"} · ${k + 1} / ${rp.lines.length}`,
+        youStart: j === 1 && k === 0,
+        card: k === 0 ? { kind: "role", text: rp.card } : null, pre: k === 0 ? [j === 0 ? RP_FIRST : RP_NEXT] : []
+      })));
+    };
+    const part3 = () => {
+      const t = freshPick("prova-p3-seen", P3, 1)[0];
+      t.lines.forEach((l, k) => add(l[0], {
+        kind: "p3", prog: `Bölüm 3 · ${k + 1} / ${t.lines.length}`,
+        card: k === 0 ? { kind: "sheet", title: t.title, items: t.items, tr: t.tr } : null,
+        pre: k === 0 ? (P.full ? [THANKS, P3_INTRO, t.intro] : [P3_INTRO, t.intro]) : []
+      }));
+    };
+    const part4 = () => {
+      const a = freshPick("prova-p4a-seen", P4A, 1)[0], b = freshPick("prova-p4b-seen", P4B, 1)[0];
+      a.qs.forEach((x, k) => add(x[0], {
+        kind: "p4a", prog: `Bölüm 4A · Soru ${k + 1} / 3`, expect: { a: x[1], kw: x[2] },
+        card: k === 0 ? { kind: "qs", list: a.qs.map(y => y[0]) } : null,
+        pre: k === 0 ? (P.full ? [P3_CLOSE] : []).concat([p4aIntro(a), 8000, a.text, P4A_AGAIN, a.text, P4A_QS]) : []
+      }));
+      add(P4B_START, { kind: "p4b", prog: "Bölüm 4B · Kısa konuşma (1,5 dk)", card: { kind: "topic", topic: b.topic, tr: b.tr },
+        pre: [THANKS, p4bIntro(b)], prep: 30, talk: 90, label: `Konu: ${b.topic} (1,5 dakika konuşma)`, sample: b.sample });
+      shuffle(b.follow).slice(0, 2).forEach((f, k) => add(f, { kind: "p4f", prog: `Bölüm 4B · Ek soru ${k + 1} / 2`, pre: k === 0 ? [THANKS] : [] }));
+    };
+    if (mode === "p2") part2();
+    else if (mode === "p3") part3();
+    else if (mode === "p4") part4();
+    else if (mode === "full") { part1(5); part2(); part3(); part4(); }
+    else part1(TOTAL);
+  }
+
+  // m: "p1" kisisel sorular, "p2" rol yapma, "p3" resimlerle karar, "p4" dinleme + kisa konusma.
+  // again=true: "Yeni sorularla tekrar" - ad/memleket bir daha sorulmaz
   async function startCall(again, m) {
     mode = m || "p1";
     unlockAudio();
@@ -765,67 +887,80 @@
       micAsked = true;
       try { const st = await navigator.mediaDevices.getUserMedia({ audio: true }); st.getTracks().forEach(t => t.stop()); } catch (_) {}
     }
-    if (mode === "p2") {
-      nOpen = 0; questions = []; meta = [];
-      freshRoleplays(RP_PICK).forEach((rp, j) => rp.lines.forEach((l, k) => { questions.push(l.q); meta.push({ rp, n: j + 1, k }); }));
-      preloadClips(questions.concat([RP_FIRST, RP_NEXT, RP_CLOSING, "Of course."]));
-    } else {
-      nOpen = again ? 0 : OPENING.length; meta = [];
-      questions = OPENING.slice(0, nOpen).concat(freshQuestions(TOTAL - nOpen));
-      preloadClips(questions.concat(BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO]));
-    }
+    build(again);
+    preloadClips(questions.concat(...meta.map(x => (x.pre || []).filter(p => typeof p === "string")), BETWEEN, [CLOSE[mode], "Of course.", AGAIN_INTRO]));
     $("rpcard").hidden = true;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;  // soru sorulmadan cevap verilemesin
+    $("btn-done").textContent = "✓ Cevabım bitti";
     idx = 0; answers = []; active = true;
     $("qtext").classList.remove("on"); $("btn-show").textContent = "👁 Soruyu yazılı gör";
     show("s-call");
     t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
     setStatus("Bağlanıyor…");
-    await new Promise(r => setTimeout(r, 1200));
+    await wait(1200);
     if (!active) return;  // baglanirken kapatildi
     if (again && mode === "p1") { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
     ask(idx);
   }
 
   async function answerDone() {
+    if (skipPrep) { skipPrep(); return; }  // hazirlik sirasinda: "Hazirim"
+    if (!active || $("btn-done").disabled) return;
+    clearInterval(talkId); talkId = null;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
+    $("btn-done").textContent = "✓ Cevabım bitti";
     setStatus("✓ Cevabınız alındı");
-    answers.push({ q: questions[idx], a: stopListening() });
+    answers.push({ q: questions[idx], a: stopListening(), m: meta[idx] || {} });
     idx++;
     if (idx < questions.length) {
-      if (mode === "p1") await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);  // rol yapmada sohbet kesintisiz akar
+      if (meta[idx - 1].kind === "p1") await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);  // diger bolumlerde sohbet kesintisiz akar
       ask(idx);
     } else {
       setStatus("Görevli konuşuyor…");
-      await say(mode === "p2" ? RP_CLOSING : CLOSING);
-      endCall();
+      await say(CLOSE[mode]);
+      if (active) endCall();
     }
   }
 
+  // Bolum 4A: cevapta beklenen kelimeler var mi (her grupta en az biri)
+  const heard = (text, kw) => { const t = text.toLowerCase(); return kw.every(g => g.some(w => t.includes(w.toLowerCase()))); };
+
   function endCall() {
+    if (!active && cur === "s-result") return;
     active = false; stopListening(); if (synth) synth.cancel();
+    clearInterval(talkId); talkId = null; if (skipPrep) skipPrep();
     $("btn-done").disabled = true; $("btn-repeat").disabled = true; if (cancelPrev) { cancelPrev(); player.pause(); }
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
-    $("result-meta").textContent = `${answers.length} ${mode === "p2" ? "replik" : "soru"} cevapladınız · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
+    const unit = { p1: "soru", p2: "replik", p3: "replik", p4: "cevap", full: "cevap" }[mode];
+    $("result-meta").textContent = `${answers.length} ${unit} · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
     const box = $("answers"); box.innerHTML = "";
     if (!answers.length) box.innerHTML = '<p class="muted">Hiç soru cevaplanmadı.</p>';
+    const MIN = { p1: 12, p2: 8, p3: 12, p4b: 80, p4f: 10 };
+    const TIP = { p1: "Bir “because…” ve bir örnek ekleyin.", p2: "Yolcuya bir açıklama ya da bir öneri ekleyin.",
+                  p3: "Fikrinizi söyleyin ve nedenini ekleyin: “I think… because…”.", p4b: "1,5 dakika boyunca konuşmaya çalışın: ne, nerede, neden, bir örnek.",
+                  p4f: "Bir “because…” ve bir örnek ekleyin." };
     answers.forEach((x, i) => {
+      const m = x.m || {};
       const words = x.a ? x.a.split(/\s+/).length : 0;
       const d = document.createElement("div"); d.className = "ans";
-      const q = document.createElement("div"); q.className = "q"; q.textContent = `${i + 1}. ${x.q}`;
+      const q = document.createElement("div"); q.className = "q"; q.textContent = `${i + 1}. ${m.label || x.q}`;
       const a = document.createElement("div"); a.className = "a" + (x.a ? "" : " empty");
       a.textContent = x.a ? "“" + x.a + "”" : (SR ? "(cevap duyulmadı)" : "(yazıya dökme bu tarayıcıda yok)");
       d.append(q, a);
-      // Kisisel bilgi sorulari (ad, memleket) kisa olabilir; digerleri icin uzunluk ipucu
-      if (SR && i >= nOpen) {
+      if (m.expect) {
+        // Dinleme sorusu: dogru cevap + duyulan cevapta beklenen kelimeler var mi
         const h = document.createElement("div");
-        const min = mode === "p2" ? 8 : 12;  // rol yapmada cevaplar dogal olarak daha kisa
-        if (words < min) { h.className = "tip"; h.textContent = mode === "p2" ? `İpucu: ${words} kelime – biraz kısa. Yolcuya bir açıklama ya da bir öneri ekleyin.` : `İpucu: ${words} kelime – biraz kısa. Bir “because…” ve bir örnek ekleyin.`; }
+        if (x.a && heard(x.a, m.expect.kw)) { h.className = "ok"; h.textContent = "✓ Doğru görünüyor – beklenen: " + m.expect.a; }
+        else { h.className = "tip"; h.textContent = "Doğru cevap: " + m.expect.a; }
+        d.append(h);
+      } else if (SR && i >= nOpen && MIN[m.kind]) {
+        const h = document.createElement("div");
+        if (words < MIN[m.kind]) { h.className = "tip"; h.textContent = `İpucu: ${words} kelime – biraz kısa. ${TIP[m.kind]}`; }
         else { h.className = "ok"; h.textContent = `${words} kelime – güzel uzunluk.`; }
         d.append(h);
       }
-      const sample = SAMPLE[x.q];
+      const sample = m.sample || SAMPLE[x.q];
       if (sample) {
         const b = document.createElement("button"); b.className = "small sample-btn"; b.textContent = "🔊 Örnek cevabı dinle";
         const t = document.createElement("div"); t.className = "sample"; t.hidden = true;
@@ -835,12 +970,15 @@
       }
       box.append(d);
     });
-    preloadClips(answers.map(x => SAMPLE[x.q]).filter(Boolean));
+    preloadClips(answers.map(x => (x.m && x.m.sample) || SAMPLE[x.q]).filter(Boolean));
     show("s-result", "replace");
   }
 
   $("btn-start").onclick = () => startCall(false, "p1");
   $("btn-start-rp").onclick = () => startCall(false, "p2");
+  $("btn-start-p3").onclick = () => startCall(false, "p3");
+  $("btn-start-p4").onclick = () => startCall(false, "p4");
+  $("btn-start-full").onclick = () => startCall(false, "full");
   $("btn-again").onclick = () => startCall(true, mode);
   $("btn-done").onclick = answerDone;
   $("btn-hangup").onclick = endCall;
@@ -848,10 +986,11 @@
     stopListening();
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
     setStatus("Görevli tekrar ediyor…");
+    const i = idx;
     await say("Of course.");
-    if (!active) return;
+    if (!active || idx !== i) return;
     await say(questions[idx]);
-    if (!active) return;
+    if (!active || idx !== i) return;
     setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
     $("btn-done").disabled = false; $("btn-repeat").disabled = false;
     startListening();
@@ -862,7 +1001,8 @@
   };
   // Menu gecisleri
   document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
-  window.__prova = { CLIPS, key, SAMPLE, POOL, OPENING, RP };  // test icin: her cumlenin ses dosyasi var mi
+  // test icin: her cumlenin ses dosyasi var mi; ornek cevaplar (erkek ses) hangileri
+  window.__prova = { CLIPS, key, SAMPLE, POOL, OPENING, RP, SAMPLES: Object.values(SAMPLE).concat(P4B.map(b => b.sample)), state: () => ({ mode, idx, questions, meta, answers, active }) };  // test icin: her cumlenin ses dosyasi var mi
 })();
 </script>
 <script src="seru-data.js"></script>
