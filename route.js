@@ -19,7 +19,7 @@
   const GAP_W = 6;
   // En yakin yolu bundan uzak olan yer (bina/park ortasi) rota sorusunda kullanilmaz: rota nerede bitecek belirsiz
   const MAX_ROAD_GAP = 130;
-  let G = null, map = null, layers = null, signLayer = null;
+  let G = null, map = null, layers = null, signLayer = null, signIcon = null, vis = () => {}, showSigns = false;
 
   // --- Veri ---
   function loadGraph() {
@@ -162,6 +162,15 @@
   const stepCost = steps => steps.reduce((a, s) => a + G.edges[s.e].len * (G.edges[s.e].minor ? MINOR_COST : 1), 0);
   const lastNode = st => { const s = st[st.length - 1], E = G.edges[s.e]; return E.a === s.from ? E.b : E.a; };
   const stepPts = s => { const E = G.edges[s.e]; return E.a === s.from ? E.pts : E.pts.slice().reverse(); };
+  // Iki adim arasindaki donus: gelis yonu (brg, kuzeyden derece) ve ne tur donus oldugu (yasak isareti icin)
+  const brgOf = (p, q) => (Math.atan2((q[1] - p[1]) * Math.cos(p[0] * Math.PI / 180), q[0] - p[0]) * 180 / Math.PI + 360) % 360;
+  function turnOf(s1, s2) {
+    const a = stepPts(s1), b = stepPts(s2);
+    const bin = brgOf(a[a.length - 2], a[a.length - 1]), bout = brgOf(b[0], b[1]);
+    const d = (bout - bin + 540) % 360 - 180;  // + saga, - sola
+    const kind = Math.abs(d) > 150 ? "no_u_turn" : Math.abs(d) < 30 ? "no_straight_on" : d > 0 ? "no_right_turn" : "no_left_turn";
+    return { kind, brg: bin };
+  }
 
   // --- Soru uretimi ---
   function places() {
@@ -241,14 +250,20 @@
       const short = Math.round(meters(G.nodes[last], q.B.p) - meters(G.nodes[lastNode(q.best.steps)], q.B.p));
       if (atB(last) && short > 50) ded(false, "", `Rota hedefe varmadan bitiyor: kırmızı işaretin önüne gelmeden ${short} m erken durdunuz.`, 2);
     }
+    out.bannedTurns = [];  // {n kavsak, kind "no_right_turn" vb., brg yaklasma yonu, from/to yol adi}
     steps.forEach((s, i) => {
       if (!legal(s.e, s.from)) out.wrongWay.push(s.e);
-      if (i && steps[i - 1].e !== s.e && G.banned.has(steps[i - 1].e + "," + s.e)) out.bannedAt.push(s.from);
+      if (i && steps[i - 1].e !== s.e && G.banned.has(steps[i - 1].e + "," + s.e)) {
+        out.bannedAt.push(s.from);
+        out.bannedTurns.push(Object.assign({ n: s.from, from: G.edges[steps[i - 1].e].name, to: G.edges[s.e].name }, turnOf(steps[i - 1], s)));
+      }
       if (q.closed && q.closed.has(s.e)) out.closedUsed.push(s.e);
     });
     const ww = [...new Set(out.wrongWay.map(e => G.edges[e].name || "isimsiz yol"))];
     ded(!ww.length, "Tek yönlü yollara uyuldu.", `Tek yönlü yolda TERS yöne gidildi: ${ww.join(", ")}.`, Math.min(12, 4 * ww.length));
-    ded(!out.bannedAt.length, "Yasak dönüş yok.", `${out.bannedAt.length} yasak dönüş yapıldı (haritadaki kırmızı halkalı işaretler).`, Math.min(12, 4 * out.bannedAt.length));
+    const TURN_TR = { no_left_turn: "sola", no_right_turn: "sağa", no_u_turn: "U", no_straight_on: "düz" };
+    const turnTxt = t => `${t.from || "isimsiz yol"} → ${t.to || "isimsiz yol"} (${TURN_TR[t.kind]} dönüş yasak)`;
+    ded(!out.bannedAt.length, "Yasak dönüş yok.", `Yasak dönüş yapıldı: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi.`, Math.min(12, 4 * out.bannedAt.length));
     if (q.closed) ded(!out.closedUsed.length, `Kapalı yol (${q.closedName}) kullanılmadı.`, `KAPALI yol kullanıldı: ${q.closedName}.`, 8);
     const um = Math.round(stepLen(steps)), bm = Math.round(stepLen(q.best.steps));
     if (reversed || !atA(first) || !atB(last)) {
@@ -300,19 +315,26 @@
     // Bir yaklasmanin butun yasaklari tek isarette yan yana ("no_left_turn,no_u_turn").
     // "Yalniz duz" mavi oku yol boyunca tek yon gibi okunuyordu (operator, 15 Eki): sola + saga donulmez olarak cizilir.
     const ORDER = ["only_left_turn", "only_right_turn", "no_left_turn", "no_straight_on", "no_right_turn", "no_u_turn"];
-    G.signs.forEach(([la, ln, kinds, brg]) => {
+    signIcon = (kinds, brg) => {
       const ks = new Set(kinds.split(",").flatMap(k => k === "only_straight_on" ? ["no_left_turn", "no_right_turn"] : [k]));
       const parts = ORDER.filter(k => ks.has(k)).map(signSvg).filter(Boolean);
-      if (!parts.length) return;
+      if (!parts.length) return null;
       const svg = parts.join(""), w = 20 * parts.length;
       const html = `<div style="display:flex;width:${w}px;transform:rotate(${brg || 0}deg) scale(var(--ss,1))">${svg}</div>`;
-      L.marker([la / 1e5, ln / 1e5], { interactive: false, icon: L.divIcon({ className: "rsign", iconSize: [w, 20], iconAnchor: [w / 2, 10], html }) }).addTo(signLayer);
+      return L.divIcon({ className: "rsign", iconSize: [w, 20], iconAnchor: [w / 2, 10], html });
+    };
+    G.signs.forEach(([la, ln, kinds, brg]) => {
+      const icon = signIcon(kinds, brg);
+      if (icon) L.marker([la / 1e5, ln / 1e5], { interactive: false, icon }).addTo(signLayer);
     });
+    // Varsayilan GIZLI (operator, 15 Eki: 'cok fazla saga sola donulmez isareti var, confusing'): OSM her ayri seritli
+    // yol gecisine de yasak kaydi tutuyor, sokakta tabelasi olmayanlar dahil. Yasak dönüş yapilirsa sonucta yalniz o
+    // kavsagin isareti cikar; hepsini gormek isteyen dugmeyle acar.
     // Kalabalik kavsaklarda (Oxford Circus: 45 m icinde 8 yaklasma) isaretler uzaktan kucuk, yakinlastirinca buyur
-    const vis = () => {
+    vis = () => {
       const z = map.getZoom();
       map.getContainer().style.setProperty("--ss", z >= 18 ? 1 : z >= 17 ? 0.8 : 0.65);
-      if (z >= 16) signLayer.addTo(map); else signLayer.remove();
+      if (showSigns && z >= 16) signLayer.addTo(map); else signLayer.remove();
     };
     map.on("zoomend", vis);
     map.on("click", ev => tap(ev.latlng));
@@ -371,7 +393,11 @@
     if (res) q.best.steps.forEach(s => L.polyline(stepPts(s), { color: "#1fb36b", weight: 10, opacity: 0.55, interactive: false }).addTo(layers));
     const bad = new Set(res ? res.wrongWay.concat(res.closedUsed) : []);
     steps.forEach(s => L.polyline(stepPts(s), { color: bad.has(s.e) ? "#e5484d" : "#2563eb", weight: 5, opacity: 0.95, interactive: false }).addTo(layers));
-    if (res) res.bannedAt.forEach(n => L.circleMarker(G.nodes[n], { radius: 12, color: "#e5484d", weight: 4, fill: false }).addTo(layers));
+    if (res) res.bannedTurns.forEach(t => {
+      L.circleMarker(G.nodes[t.n], { radius: 12, color: "#e5484d", weight: 4, fill: false }).addTo(layers);
+      const icon = signIcon(t.kind, t.brg);  // yalniz ihlal edilen yasagin isareti, gelis yonune donuk
+      if (icon) L.marker(G.nodes[t.n], { interactive: false, icon, zIndexOffset: 1000 }).addTo(layers);
+    });
     taps.forEach(n => L.circleMarker(G.nodes[n], { radius: 4, color: "#2563eb", fillColor: "#fff", fillOpacity: 1, weight: 2, interactive: false }).addTo(layers));
     if (res) [[q.A, q.best.steps[0].from], [q.B, lastNode(q.best.steps)]].forEach(([P, n]) =>
       L.polyline([G.nodes[n], P.p], { color: "#1fb36b", weight: 4, opacity: 0.8, dashArray: "4 6", interactive: false }).addTo(layers));
@@ -456,6 +482,11 @@
   $("route-exam9").onclick = () => startRoutes("exam9");
   $("route-again").onclick = () => startRoutes(lastExam);
   $("route-undo").onclick = undo;
+  $("route-signs").onclick = () => {
+    showSigns = !showSigns; vis();
+    $("route-signs").textContent = showSigns ? "🚫 Dönüş yasaklarını gizle" : "🚫 Dönüş yasaklarını göster";
+    if (showSigns && map && map.getZoom() < 16) $("route-status").textContent = "İşaretleri görmek için haritayı büyütün.";
+  };
   $("route-clear").onclick = () => { if (!done) { taps = []; steps = []; hops = []; draw(); } };
   $("route-submit").onclick = submit;
   $("route-next").onclick = next;
