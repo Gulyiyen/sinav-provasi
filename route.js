@@ -341,9 +341,16 @@
     if (map) return;
     map = L.map("route-map", { zoomControl: false, doubleClickZoom: false, zoomSnap: 0.5 });
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Kendi haritamiz (azmap.js): her sokakta ad + tek yon oklari. Veri yuklenemezse OSM karolarina donulur.
+    const tiles = () => L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
+    if (window.AZMap) {
+      const lat = G.nodes.map(n => n[0]), lng = G.nodes.map(n => n[1]);
+      map.setMaxBounds([[Math.min(...lat) - 0.004, Math.min(...lng) - 0.006], [Math.max(...lat) + 0.004, Math.max(...lng) + 0.006]]);
+      map.setMinZoom(14); map.setMaxZoom(19);
+      window.AZMap.layer().on("dataerror", tiles).addTo(map);
+    } else tiles();
     layers = L.layerGroup().addTo(map);
     // Donus yasagi isaretleri (OSM karolari gostermiyor): yakinlastirinca gorunur
     signLayer = L.layerGroup();
