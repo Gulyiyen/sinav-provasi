@@ -10,7 +10,8 @@ permissions:
   contents: write
 jobs:
   refresh:
-    runs-on: ubuntu-latest
+    # Surum sabit: ubuntu-latest 19 Eki 2026'da Ubuntu 26'ya geciyor; Playwright'in sistem paketleri orada degisebilir
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
