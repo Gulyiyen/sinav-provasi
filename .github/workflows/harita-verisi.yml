@@ -1,0 +1,49 @@
+# Aylik harita verisi: OpenStreetMap'ten taze yol agi + harita cekilir, yeniden uretilir, KAPI testinden gecerse yayinlanir.
+# Ucretsiz (public repo'da GitHub Actions). Test kalirsa eski veri yayinda kalir; Actions sekmesinde kirmizi gorunur.
+# Elle calistirmak icin: GitHub -> Actions -> "Aylik harita verisi" -> Run workflow.
+name: Aylik harita verisi
+on:
+  schedule:
+    - cron: "17 3 3 * *"   # her ayin 3'u, 03:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Playwright (kapi testi icin gercek tarayici)
+        run: |
+          pip install playwright==1.48.0
+          python -m playwright install --with-deps chromium
+      - name: OSM verisini cek (Overpass)
+        run: |
+          mkdir -p data_raw
+          python tools/route_fetch.py data_raw/route_raw.json
+          python tools/map_fetch.py data_raw/map_raw.json
+      - name: Yol agini ve haritayi uret
+        run: |
+          python tools/route_build.py data_raw/route_raw.json route-graph.js
+          python tools/map_build.py data_raw/route_raw.json data_raw/map_raw.json map-data.js
+      - name: Kapi testi
+        run: python tools/check_route.py
+      - name: Yayinla
+        run: |
+          if git diff --quiet -- route-graph.js map-data.js; then echo "Veri degismemis"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add route-graph.js map-data.js
+          git commit -m "Aylik OSM verisi ($(date -u +%Y-%m-%d))"
+          git push
+      - name: Ham veriyi sakla (inceleme icin, 30 gun)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: osm-ham-veri
+          path: data_raw/
+          retention-days: 30
