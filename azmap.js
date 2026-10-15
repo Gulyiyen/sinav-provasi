@@ -72,33 +72,60 @@
   const Layer = L.Layer.extend({
     onAdd(map) {
       this._map = map;
-      if (!map.getPane("az")) { const p = map.createPane("az"); p.style.zIndex = 250; p.style.pointerEvents = "none"; }
-      this._c = L.DomUtil.create("canvas", "", map.getPane("az"));
+      // Harita donebilir (leaflet-rotate): katman DONEN pane'de durur, yollarla birlikte doner
+      if (!map.getPane("az")) { const p = map.createPane("az", map._rotatePane || undefined); p.style.zIndex = 250; p.style.pointerEvents = "none"; }
+      // leaflet-zoom-animated: buyutme animasyonunda eski cizim CSS ile olceklenir (operator: 'buyutunce gec aciliyor' -
+      // eskiden animasyon boyunca gizleniyordu), animasyon bitince keskin olarak yeniden cizilir
+      this._c = L.DomUtil.create("canvas", "leaflet-zoom-animated", map.getPane("az"));
       this._c.style.position = "absolute";
-      map.on("moveend zoomend resize viewreset", this._draw, this);
-      map.on("zoomstart", this._hide, this);
+      map.on("moveend zoomend resize viewreset", this._schedule, this);
+      map.on("rotate", this._rotated, this);
+      map.on("zoomanim", this._animZoom, this);
+      map.on("zoom", this._onZoom, this);  // parmakla buyutme (pinch) sirasinda surekli
       if (map.attributionControl) map.attributionControl.addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>');
       load().then(() => this._draw()).catch(() => this.fire("dataerror"));
     },
     onRemove(map) {
-      map.off("moveend zoomend resize viewreset", this._draw, this);
-      map.off("zoomstart", this._hide, this);
+      map.off("moveend zoomend resize viewreset", this._schedule, this);
+      map.off("rotate", this._rotated, this);
+      map.off("zoomanim", this._animZoom, this);
+      map.off("zoom", this._onZoom, this);
       this._c.remove();
     },
-    _hide() { this._c.style.visibility = "hidden"; },
+    // moveend + zoomend ayni anda gelir: tek cizim
+    _schedule() { if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = null; this._draw(); }); },
+    _animZoom(e) { this._transform(e.center, e.zoom); },
+    _onZoom() { this._transform(this._map.getCenter(), this._map.getZoom()); },
+    // L.Renderer ile ayni hesap: cizildigi andaki sol ust kose yeni zoom'a olceklenir
+    _transform(center, zoom) {
+      if (this._z == null) return;
+      const map = this._map, s = map.getZoomScale(zoom, this._z), o = map._getNewPixelOrigin(center, zoom);
+      L.DomUtil.setTransform(this._c, L.point(this._ox * s - o.x, this._oy * s - o.y), s);
+    },
+    // Dondurme sirasinda canvas CSS ile doner; parmak durunca yeniden cizilir (yazilar dik, kenarlar dolu)
+    _rotated() { clearTimeout(this._rt); this._rt = setTimeout(() => this._draw(), 120); },
     _draw() {
       if (!D || !this._map) return;
-      const map = this._map, size = map.getSize(), z = map.getZoom(), PAD = 0.5;
-      const W = Math.round(size.x * (1 + 2 * PAD)), H = Math.round(size.y * (1 + 2 * PAD));
-      const tl = map.containerPointToLayerPoint([-size.x * PAD, -size.y * PAD]);
+      const map = this._map, size = map.getSize(), z = map.getZoom(), PAD = 0.2;
+      // Donuk haritada ekran, katman duzleminde egik bir dikdortgen: ekranin kosegeni kadar bir kare her acida kaplar
+      const side = Math.round(Math.hypot(size.x, size.y) * (1 + 2 * PAD)), W = side, H = side;
+      const mid = map.containerPointToLayerPoint([size.x / 2, size.y / 2]), tl = L.point(mid.x - side / 2, mid.y - side / 2);
+      // Kisa kaydirma: cizili kenar payi yetiyor, yeniden cizme (telefonda akicilik)
+      const org0 = map.getPixelOrigin(), am = [org0.x + mid.x, org0.y + mid.y], bear = map.getBearing ? map.getBearing() : 0;
+      const sig = z + "|" + bear + "|" + side;
+      if (this._sig === sig && this._am && Math.hypot(am[0] - this._am[0], am[1] - this._am[1]) < side * PAD * 0.6) {
+        L.DomUtil.setTransform(this._c, L.point(this._ox - org0.x, this._oy - org0.y), 1);
+        return;
+      }
+      this._sig = sig; this._am = am;
       const dpr = Math.min(window.devicePixelRatio || 1, 2), c = this._c;
       c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px";
-      L.DomUtil.setPosition(c, tl);
-      c.style.visibility = "visible";
+      L.DomUtil.setTransform(c, tl, 1);
       const ctx = c.getContext("2d");
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // zoom-0 Mercator -> bu canvas'in pikseli
       const k = Math.pow(2, z), org = map.getPixelOrigin(), ox = org.x + tl.x, oy = org.y + tl.y;
+      this._ox = ox; this._oy = oy; this._z = z;  // buyutme animasyonu icin
       const X = p => p[0] * k - ox, Y = p => p[1] * k - oy;
       const vis = b => b[2] * k - ox > -20 && b[0] * k - ox < W + 20 && b[3] * k - oy > -20 && b[1] * k - oy < H + 20;
       const path = p => { ctx.beginPath(); ctx.moveTo(X(p[0]), Y(p[0])); for (let i = 1; i < p.length; i++) ctx.lineTo(X(p[i]), Y(p[i])); };
@@ -147,6 +174,9 @@
     _labels(ctx, vis, X, Y, z, W, H) {
       if (z < 14) return;
       const boxes = [], lastAt = {};
+      // Harita B kadar donukken katmandaki a acisi ekranda a+B gorunur: yazilar EKRANA gore dik tutulur
+      const B = (this._map.getBearing ? this._map.getBearing() : 0) * Math.PI / 180;
+      const upright = a => { let s = a + B; s = Math.atan2(Math.sin(s), Math.cos(s)); return s > Math.PI / 2 ? a - Math.PI : s < -Math.PI / 2 ? a + Math.PI : a; };
       const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
       const fs = cl => (cl <= 1 ? 12 : cl === 2 ? 11.5 : 11) * (z >= 17 ? 1.08 : z <= 15 ? 0.88 : 1);
       const order = D.chains.filter(r => vis(r.b) && (z >= 16 || r.c <= 4) && (z >= 15 || r.c <= 1)).sort((a, b) => a.c - b.c);
@@ -158,7 +188,8 @@
         const cum = [0]; for (let i = 1; i < P.length; i++) cum.push(cum[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
         const total = cum[cum.length - 1];
         if (total < tw + 12) return false;
-        if (P[P.length - 1][0] < P[0][0]) { P = P.reverse(); for (let i = 0; i < cum.length; i++) cum[i] = total - cum[i]; cum.reverse(); }
+        const sx = (P[P.length - 1][0] - P[0][0]) * Math.cos(B) - (P[P.length - 1][1] - P[0][1]) * Math.sin(B);  // ekranda soldan saga mi
+        if (sx < 0) { P = P.reverse(); for (let i = 0; i < cum.length; i++) cum[i] = total - cum[i]; cum.reverse(); }
         const at = s => { let i = 1; while (i < cum.length - 1 && cum[i] < s) i++;
           const f = (s - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1);
           return [P[i - 1][0] + (P[i][0] - P[i - 1][0]) * f, P[i - 1][1] + (P[i][1] - P[i - 1][1]) * f, Math.atan2(P[i][1] - P[i - 1][1], P[i][0] - P[i - 1][0])]; };
@@ -200,7 +231,7 @@
           const cx = (run.x1 + run.x2) / 2, cy = (run.y1 + run.y2) / 2;
           if (cx < 0 || cy < 0 || cx > W || cy > H || near(r.name, cx, cy)) continue;
           let ang = Math.atan2(run.y2 - run.y1, run.x2 - run.x1);
-          if (ang > Math.PI / 2) ang -= Math.PI; else if (ang < -Math.PI / 2) ang += Math.PI;  // yazi ters durmasin
+          ang = upright(ang);  // yazi ekranda ters durmasin
           const hw = tw / 2 + 3, ca = Math.abs(Math.cos(ang)), sa = Math.abs(Math.sin(ang));
           const ex = hw * ca + hh * sa, ey = hw * sa + hh * ca, b = [cx - ex, cy - ey, cx + ex, cy + ey];
           if (hit(b)) continue;
@@ -224,7 +255,8 @@
         const bb = [cx - tw / 2, cy - 8, cx + tw / 2, cy + 8];
         if (cx < 0 || cy < 0 || cx > W || cy > H || hit(bb)) return;
         boxes.push(bb);
-        ctx.strokeStyle = C.halo; ctx.lineWidth = 3; ctx.strokeText(a.name, cx, cy); ctx.fillText(a.name, cx, cy);
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(-B);  // park adi ekranda yatay
+        ctx.strokeStyle = C.halo; ctx.lineWidth = 3; ctx.strokeText(a.name, 0, 0); ctx.fillText(a.name, 0, 0); ctx.restore();
       });
     }
   });

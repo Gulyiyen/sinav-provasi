@@ -175,13 +175,22 @@
     }
     return null;
   }
-  // Iki dokunus arasi yol: adayin dokundugu yerleri birlestirir. Kural disi parcalar YASAK DEGIL, yalnizca biraz
-  // pahali: neredeyse esit bir yasal yol varsa o cizilir (adayin kastetmedigi ihlal cezalanmasin);
-  // aday kural disi yola sik sik dokunursa o yol cizilir ve puanlamada yakalanir.
-  function hop(s, t, closed) {
+  // Iki dokunus arasi yol: adayin dokundugu yerleri birlestirir. Kural disi parcalar YASAK DEGIL, ama pahali:
+  // makul uzunlukta yasal bir yol varsa o cizilir (adayin kastetmedigi ihlal cezalanmasin); kural disi yol ancak
+  // yasal yol cok daha uzunsa (aday belli ki oradan gitmek istiyor) cizilir ve puanlamada yakalanir.
+  // (Ters yon 1.5x+15 iken Euston Road'da 71 m'lik dogru tur yerine 26 m ters yon seciliyordu: dogru rotayi
+  // izleyen aday ceza aliyordu.)
+  // before: onceki adimlar. Yeni parca kavsaga NEREDEN gelindigini bilerek baslar: eskiden her parca sifirdan
+  // basliyordu ve dokunulan kavsakta iki parca arasindaki gecis yasak donus/U olabiliyordu (Kingsway, Portman Square).
+  function hop(s, t, closed, before) {
     const dist = new Map(), prev = new Map(), H = Heap();
     const key = (e, n, ref) => e + ">" + n + ">" + refKey(ref);
-    dist.set(key(-1, s, null), 0); H.push(0, [-1, s, 0, null]);
+    let ein0 = -1, ref0 = null;
+    if (before && before.length) {
+      for (let i = 1; i < before.length; i++) ref0 = uAt(before[i - 1].e, before[i].from, before[i].e, ref0) ? null : nextRef(before[i - 1].e, before[i].from, before[i].e, ref0);
+      ein0 = before[before.length - 1].e;
+    }
+    dist.set(key(ein0, s, ref0), 0); H.push(0, [ein0, s, 0, ref0]);
     while (H.size) {
       const [c, [ein, n, len, ref]] = H.pop();
       const k = key(ein, n, ref);
@@ -196,9 +205,9 @@
         if (e === ein && G.adj[n].length > 1) continue;
         const E = G.edges[e], m = other(e, n);
         let w = E.len;
-        if (!legal(e, n) || (closed && closed.has(e))) w = w * 1.5 + 15;
-        if (ein >= 0 && G.banned.has(ein + "," + e)) w += 40;
-        if (uAt(ein, n, e, ref)) w += 60;  // aday karsi seride dokunsa bile birlestirme kendiliginden U uydurmasin
+        if (!legal(e, n) || (closed && closed.has(e))) w = w * 2.5 + 60;
+        if (ein >= 0 && G.banned.has(ein + "," + e)) w += 120;
+        if (uAt(ein, n, e, ref)) w += 400;  // U gercekte yok: en iyi rota U yerine uzun tur atar, aradaki dokunuslar o turu kisaltip U uydurmasin (60 iken Euston Road'da uyduruyordu)
         const r2 = nextRef(ein, n, e, ref);
         const nc = c + w, nk = key(e, m, r2);
         if (nc < (dist.has(nk) ? dist.get(nk) : Infinity)) { dist.set(nk, nc); prev.set(nk, { from: k, step: { e, from: n } }); H.push(nc, [e, m, len + E.len, r2]); }
@@ -339,8 +348,26 @@
 
   function ensureMap() {
     if (map) return;
-    map = L.map("route-map", { zoomControl: false, doubleClickZoom: false, zoomSnap: 0.5 });
+    // Elle dondurme (operator, 15 Eki: 'bazen yol ters kaliyor'): iki parmakla cevir ya da dugmeler (leaflet-rotate)
+    const canRotate = !!(L.Map.TouchRotate);
+    map = L.map("route-map", { zoomControl: false, doubleClickZoom: false, zoomSnap: 0.5,
+      rotate: canRotate, touchRotate: canRotate, rotateControl: false, shiftKeyRotate: false, bearing: 0 });
     L.control.zoom({ position: "bottomright" }).addTo(map);
+    if (canRotate) {
+      const RotCtl = L.Control.extend({ options: { position: "topright" }, onAdd() {
+        const box = L.DomUtil.create("div", "leaflet-bar rotbar");
+        [["⟲", "Sola çevir", -30], ["⬆N", "Kuzey yukarı", 0], ["⟳", "Sağa çevir", 30]].forEach(([t, title, d]) => {
+          const a = L.DomUtil.create("a", "", box); a.href = "#"; a.textContent = t; a.title = title; a.setAttribute("role", "button");
+          L.DomEvent.on(a, "click", e => { L.DomEvent.stop(e); map.setBearing(d ? map.getBearing() + d : 0); });
+        });
+        L.DomEvent.disableClickPropagation(box);
+        return box;
+      } });
+      new RotCtl().addTo(map);
+      // Isaretler (marker) donmez, dik kalir: icindeki ok haritanin acisi kadar cevrilir
+      const setMb = () => map.getContainer().style.setProperty("--mb", map.getBearing() + "deg");
+      map.on("rotate", setMb); setMb();
+    }
     // Kendi haritamiz (azmap.js): her sokakta ad + tek yon oklari. Veri yuklenemezse OSM karolarina donulur.
     const tiles = () => L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -377,7 +404,7 @@
       const parts = ORDER.filter(k => ks.has(k)).map(signSvg).filter(Boolean);
       if (!parts.length) return null;
       const svg = parts.join(""), w = 20 * parts.length;
-      const html = `<div style="display:flex;width:${w}px;transform:rotate(${brg || 0}deg) scale(var(--ss,1))">${svg}</div>`;
+      const html = `<div style="display:flex;width:${w}px;transform:rotate(calc(${brg || 0}deg + var(--mb,0deg))) scale(var(--ss,1))">${svg}</div>`;
       return L.divIcon({ className: "rsign", iconSize: [w, 20], iconAnchor: [w / 2, 10], html });
     };
     G.signs.forEach(([la, ln, kinds, brg]) => {
@@ -482,13 +509,30 @@
     if (best < 0) { $("route-status").textContent = "Oraya yakın bir kavşak yok – yolun üzerine, kavşağa yakın dokunun (gerekirse büyütün)."; return; }
     if (taps.length && taps[taps.length - 1] === best) return;
     if (taps.length) {
-      const h = hop(taps[taps.length - 1], best, qs[qi].closed);
+      const h = onModel(taps[taps.length - 1], best) || hop(taps[taps.length - 1], best, qs[qi].closed, steps);
       if (!h) { $("route-status").textContent = "Bu nokta önceki noktadan çok uzak. Yol boyunca daha sık dokunun."; return; }
       hops.push(h.steps.length); steps.push(...h.steps);
     }
     taps.push(best);
     $("route-status").textContent = taps.length === 1 ? "Başladınız. Yol boyunca dokunmaya devam edin; bitince “Rotayı bitir”." : "Devam edin. Yanlış dokunduysanız “Geri al”.";
     draw();
+  }
+  // Aday model rotanin uzerindeki kavsaklara sirayla dokunuyorsa ve simdiye kadar da model rotadaysa, arasi model
+  // rotanin kendisidir. (Seyrek dokunusta iki dokunus arasindaki en kisa yol, model rotanin bir sonraki donusu icin
+  // sectigi yaklasmayi bilemez: Procter Street yerine Catton Street -> ardindan yasak donus. Dogru rotayi izleyen
+  // aday ceza almasin.)
+  function onModel(a, b) {
+    const ms = qs[qi].best.steps, k = steps.length;
+    if (k >= ms.length || steps.some((s, i) => s.e !== ms[i].e) || ms[k].from !== a) return null;
+    for (let j = k; j < ms.length; j++) {
+      const to = lastNode(ms.slice(j, j + 1));
+      if (to === b) {
+        const part = ms.slice(k, j + 1), len = stepLen(part);
+        if (len > MAX_HOP && part.length > MAX_HOP_EDGES) return null;  // hop ile ayni "cok uzak" kurali
+        return { steps: part, len };
+      }
+    }
+    return null;
   }
   function undo() {
     if (done || !taps.length) return;
@@ -550,5 +594,5 @@
   $("route-submit").onclick = submit;
   $("route-next").onclick = next;
   $("route-trbtn").onclick = () => { const t = $("route-tr"); t.hidden = !t.hidden; };
-  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, turnOf, uTurnsIn, debugPlaces: () => places(), map: () => map };  // test icin
+  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, hop, turnOf, uTurnsIn, uAt, debugPlaces: () => places(), map: () => map };  // test icin
 })();
