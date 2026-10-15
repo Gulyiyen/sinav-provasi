@@ -411,58 +411,61 @@
     "Hello. Thank you for coming today. I'm going to ask you some questions about yourself. First, can you tell me your full name, please?",
     "Thank you. And where are you from?"
   ];
-  const POOL = [
-    "How long have you lived in the UK?",
-    "What do you like most about living in London?",
-    "What do you usually do in your free time?",
-    "Can you tell me something about your family?",
-    "What kind of work do you do at the moment?",
-    "Why do you want to become a private hire driver?",
-    "What do you think makes a good driver?",
-    "How do you usually travel around London?",
-    "What is your favourite part of London, and why?",
-    "Do you prefer working in the day or at night? Why?",
-    "What did you do last weekend?",
-    "What are your plans for next year?",
-    "Can you describe the area where you live?",
-    "What kind of food do you like? Do you enjoy cooking?",
-    "How do you relax after a long day at work?",
-    "What was your first job?",
-    "Do you enjoy driving? Why, or why not?",
-    "How has London changed since you first came here?",
-    "What would you do if a passenger left something in your car?",
-    "What is the best thing about your job?",
-    "What do you like about your neighbourhood?",
-    "What do you usually do on Sundays?",
-    "Can you tell me about your best friend?",
-    "What languages do you speak?",
-    "How did you learn English?",
-    "What do you find difficult about learning English?",
-    "What is the weather like in your home country?",
-    "What do you miss about your home country?",
-    "Who do you live with?",
-    "What sports do you like to watch or play?",
-    "What kind of music do you enjoy?",
-    "Do you like watching films? What kind of films?",
-    "Where did you go on your last holiday?",
-    "Where would you like to travel in the future, and why?",
-    "What is your favourite season, and why?",
-    "How do you keep fit and healthy?",
-    "What do you usually have for breakfast?",
-    "Do you prefer shopping online or in shops? Why?",
-    "How often do you use your mobile phone, and what for?",
-    "Can you describe a typical day for you?",
-    "How do you celebrate special occasions with your family?",
-    "What is the most important festival in your country?",
-    "What would you do if a passenger was rude to you?",
-    "How would you help a passenger who uses a wheelchair?",
-    "What do you do if you get lost while driving?",
-    "When is the busiest time on London's roads?",
-    "What would you do if you felt tired while driving?",
-    "Why is good customer service important for a driver?",
-    "What makes a journey comfortable for a passenger?",
-    "How do you stay calm in heavy traffic?"
+  // Gercek sinav (LanguageCert TfL Handbook): ad + gunluk konulardan sorular; gorevli konuyu adiyla acar.
+  // daily:false = soforluk konusu; gercek sinavda yok, yalniz alistirma turlarinda cikar.
+  const TOPICS = [
+    { en: "your family", tr: "Aile", qs: [
+      "Can you tell me something about your family?", "Who do you live with?",
+      "Can you tell me about your best friend?", "How do you celebrate special occasions with your family?"] },
+    { en: "where you live", tr: "Yaşadığınız yer", qs: [
+      "How long have you lived in the UK?", "What do you like most about living in London?",
+      "What is your favourite part of London, and why?", "Can you describe the area where you live?",
+      "What do you like about your neighbourhood?", "How has London changed since you first came here?"] },
+    { en: "your home country", tr: "Memleketiniz", qs: [
+      "What do you miss about your home country?", "What is the most important festival in your country?"] },
+    { en: "work", tr: "İş", qs: [
+      "What kind of work do you do at the moment?", "Why do you want to become a private hire driver?",
+      "What was your first job?", "What is the best thing about your job?",
+      "Do you prefer working in the day or at night? Why?", "What are your plans for next year?"] },
+    { en: "free time", tr: "Boş zaman", qs: [
+      "What do you usually do in your free time?", "What did you do last weekend?", "What do you usually do on Sundays?",
+      "How do you relax after a long day at work?", "Can you describe a typical day for you?"] },
+    { en: "food", tr: "Yemek", qs: [
+      "What kind of food do you like? Do you enjoy cooking?", "What do you usually have for breakfast?",
+      "Do you prefer eating at home or in restaurants? Why?", "What is a popular dish from your country?",
+      "What do you usually eat when you are working?"] },
+    { en: "sport", tr: "Spor", qs: [
+      "What sports do you like to watch or play?", "How do you keep fit and healthy?",
+      "Did you play any sports when you were a child?", "Which sport is the most popular in your country?",
+      "Do you think sport is important for children? Why?"] },
+    { en: "transport", tr: "Ulaşım", qs: [
+      "How do you usually travel around London?", "When is the busiest time on London's roads?", "Do you enjoy driving? Why, or why not?",
+      "What do you think of public transport in London?", "Do you prefer travelling by bus or by Tube? Why?",
+      "How did you travel to the test centre today?"] },
+    { en: "the Internet", tr: "İnternet", qs: [
+      "How often do you use your mobile phone, and what for?", "Do you prefer shopping online or in shops? Why?",
+      "How often do you use the Internet, and what for?", "Do you think children spend too much time online? Why?",
+      "What websites or apps do you use most?", "Is the Internet a good way to learn new things? Why?"] },
+    { en: "music and films", tr: "Müzik ve film", qs: [
+      "What kind of music do you enjoy?", "Do you like watching films? What kind of films?",
+      "Do you prefer watching films at home or at the cinema?"] },
+    { en: "holidays", tr: "Tatil", qs: [
+      "Where did you go on your last holiday?", "Where would you like to travel in the future, and why?",
+      "What do you like to do on holiday?"] },
+    { en: "the weather", tr: "Hava durumu", qs: [
+      "What is the weather like in your home country?", "What is your favourite season, and why?",
+      "What do you think of the weather in London?", "What do you like to do when the weather is nice?"] },
+    { en: "learning languages", tr: "Dil öğrenmek", qs: [
+      "What languages do you speak?", "How did you learn English?", "What do you find difficult about learning English?"] },
+    { en: "driving", tr: "Şoförlük", daily: false, qs: [
+      "What do you think makes a good driver?", "What would you do if a passenger left something in your car?",
+      "What would you do if a passenger was rude to you?", "How would you help a passenger who uses a wheelchair?",
+      "What do you do if you get lost while driving?", "What would you do if you felt tired while driving?",
+      "Why is good customer service important for a driver?", "What makes a journey comfortable for a passenger?",
+      "How do you stay calm in heavy traffic?"] }
   ];
+  TOPICS.forEach(t => { t.intro = `Now, let's talk about ${t.en}.`; });
+  const POOL = TOPICS.flatMap(t => t.qs);
   // Ornek cevaplar (B1: cevap + because + kucuk ornek). Ayri sesle (Ryan) okunur.
   const SAMPLE = {
     "Hello. Thank you for coming today. I'm going to ask you some questions about yourself. First, can you tell me your full name, please?": "My name is Mehmet Yilmaz. My first name is spelled M, E, H, M, E, T.",
@@ -516,9 +519,25 @@
     "What would you do if you felt tired while driving?": "If I felt tired, I would stop in a safe place and take a break, because tired driving is very dangerous. I would rest before I continued.",
     "Why is good customer service important for a driver?": "Good customer service is important because happy passengers come back and give good ratings. For example, a friendly greeting and a clean car make a big difference.",
     "What makes a journey comfortable for a passenger?": "A comfortable journey means a clean car, smooth driving and the right temperature. I also think it's important to ask passengers if they want music or a quiet journey.",
+    "How often do you use the Internet, and what for?": "I use the Internet every day. I use it to read the news, watch videos and send messages to my family in Turkey. I also use it to pay my bills.",
+    "Do you think children spend too much time online? Why?": "Yes, I think many children spend too much time online. For example, my son wants to play games on his tablet all evening, so we have a rule: only one hour a day.",
+    "What websites or apps do you use most?": "I use WhatsApp most, because I can talk to my family for free. I also use Google Maps every day, and sometimes YouTube to watch football highlights.",
+    "Is the Internet a good way to learn new things? Why?": "Yes, I think it's very useful. For example, I watch videos to practise my English, and I learned how to change a bulb in my car from a video online.",
+    "What do you think of public transport in London?": "I think public transport in London is very good. The Tube is fast and there are buses everywhere. But it can be expensive, and very crowded in the rush hour.",
+    "Do you prefer travelling by bus or by Tube? Why?": "I prefer the Tube, because it's faster and it doesn't get stuck in traffic. But on the bus you can see the city, so sometimes I take the bus when I'm not in a hurry.",
+    "How did you travel to the test centre today?": "I came by car today. It took about forty minutes, because there was some traffic on the way. I left home early, so I wasn't late.",
+    "Do you prefer eating at home or in restaurants? Why?": "I prefer eating at home, because it's cheaper and healthier. But once a month we go to a restaurant with the family, usually for a special occasion.",
+    "What is a popular dish from your country?": "A very popular dish from Turkey is lahmacun. It's a thin, round bread with minced meat, tomatoes and onions on top. We eat it with lemon and fresh parsley.",
+    "What do you usually eat when you are working?": "When I'm working, I usually take a sandwich and some fruit from home. If I'm very busy, I sometimes buy something quick, but I try not to eat fast food every day.",
+    "Did you play any sports when you were a child?": "Yes, when I was a child I played football every day after school with my friends in the street. I also played basketball at school for two years.",
+    "Which sport is the most popular in your country?": "Football is the most popular sport in Turkey. People love their teams very much, and when there's a big match, the streets are empty.",
+    "Do you think sport is important for children? Why?": "Yes, I think it's very important. Sport keeps children healthy, and they learn to work in a team. My son goes to a football club on Saturdays, and he loves it.",
+    "Do you prefer watching films at home or at the cinema?": "I prefer watching films at home, because it's more comfortable and much cheaper. But for a big new film, we sometimes go to the cinema as a family.",
+    "What do you think of the weather in London?": "I think the weather in London changes very quickly. In the morning it can be sunny, and in the afternoon it rains. So I always keep an umbrella in my car.",
+    "What do you like to do when the weather is nice?": "When the weather is nice, I like to go to the park with my family. We take some food and have a picnic, and the children play football.",
+    "What do you like to do on holiday?": "On holiday I like to relax by the sea and try local food. I also enjoy walking around old towns and taking photos with my family.",
     "How do you stay calm in heavy traffic?": "I stay calm by remembering that getting angry doesn't help. I listen to quiet music, take deep breaths and leave enough time for my journeys."
   };
-  const TOTAL = 10;  // her turda soru sayisi
   const AGAIN_INTRO = "Welcome back. Let's practise with some new questions.";
   const BETWEEN = ["Thank you.", "Okay, thank you.", "Thank you very much.", "Right, thank you."];
   const CLOSING = "Thank you. That is the end of part one.";
@@ -590,7 +609,7 @@
     .concat(P4A.flatMap(a => [p4aIntro(a), a.text].concat(a.qs.map(x => x[0]))))
     .concat(P4B.flatMap(b => [p4bIntro(b), b.sample].concat(b.follow)));
   const CLOSE = { p1: CLOSING, p2: RP_CLOSING, p3: P3_CLOSE, p4: P4_CLOSE, full: P4_CLOSE };
-  const CLIPS = RP_TEXTS.concat(P34_TEXTS, OPENING, POOL, BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
+  const CLIPS = RP_TEXTS.concat(P34_TEXTS, OPENING, POOL, TOPICS.map(t => t.intro), BETWEEN, [CLOSING, "Of course.", AGAIN_INTRO], Object.values(SAMPLE));
   const player = new Audio();
   player.preload = "auto";
 
@@ -734,12 +753,12 @@
     try { localStorage.setItem(key, JSON.stringify(seen.concat(pick))); } catch (_) {}
     return pick.map(i => all[i]);
   }
-  // Bu telefonda sorulmus sorular hatirlanir; havuz bitince bastan
-  function freshQuestions(PICK) {
+  // Bu telefonda sorulmus sorular hatirlanir; konunun sorulari bitince o konu bastan
+  function freshQuestions(qs, PICK) {
     let seen = [];
     try { seen = JSON.parse(localStorage.getItem("prova-seen") || "[]"); } catch (_) {}
-    let fresh = POOL.filter(q => !seen.includes(q));
-    if (fresh.length < PICK) { seen = []; fresh = POOL.slice(); }
+    let fresh = qs.filter(q => !seen.includes(q));
+    if (fresh.length < PICK) { seen = seen.filter(q => !qs.includes(q)); fresh = qs.slice(); }
     const pick = shuffle(fresh).slice(0, PICK);
     try { localStorage.setItem("prova-seen", JSON.stringify(seen.concat(pick))); } catch (_) {}
     return pick;
@@ -849,10 +868,17 @@
     questions = []; meta = []; nOpen = 0;
     const add = (q, m) => { questions.push(q); meta.push(m); };
     const P = { full: mode === "full" };
-    const part1 = (n) => {
+    // nTopic konu, her konudan perTopic soru; gorevli her konuyu adiyla acar ("Now, let's talk about food.")
+    const part1 = (nTopic, perTopic) => {
       nOpen = again ? 0 : OPENING.length;
-      OPENING.slice(0, nOpen).concat(freshQuestions(n - nOpen)).forEach((q, k, all) =>
-        add(q, { kind: "p1", prog: P.full ? `Bölüm 1 · Soru ${k + 1} / ${all.length}` : null }));
+      const list = OPENING.slice(0, nOpen).map(q => ({ q }));
+      const pool = TOPICS.filter(t => !P.full || t.daily !== false);
+      freshPick(P.full ? "prova-topic-full-seen" : "prova-topic-seen", pool, nTopic).forEach(t =>
+        freshQuestions(t.qs, perTopic).forEach((q, k) => list.push({ q, t, first: k === 0 })));
+      list.forEach((x, k) => add(x.q, {
+        kind: "p1", pre: x.first ? [x.t.intro] : [],
+        prog: `${P.full ? "Bölüm 1 · " : ""}${x.t ? "Konu: " + x.t.tr + " · " : ""}Soru ${k + 1} / ${list.length}`
+      }));
     };
     const part2 = () => {
       const pair = [freshPick("prova-rp-seen", RP, 1)[0], freshPick("prova-rpb-seen", RPB, 1)[0]];
@@ -884,8 +910,8 @@
     if (mode === "p2") part2();
     else if (mode === "p3") part3();
     else if (mode === "p4") part4();
-    else if (mode === "full") { part1(5); part2(); part3(); part4(); }
-    else part1(TOTAL);
+    else if (mode === "full") { part1(4, 1); part2(); part3(); part4(); }
+    else part1(again ? 5 : 4, 2);
   }
 
   // m: "p1" kisisel sorular, "p2" rol yapma, "p3" resimlerle karar, "p4" dinleme + kisa konusma.
