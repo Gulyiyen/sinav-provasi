@@ -296,11 +296,24 @@
         : `<circle cx="50" cy="50" r="43" fill="#fff" stroke="#c8102e" stroke-width="12"/>` + a("#000") + `<line x1="20" y1="20" x2="80" y2="80" stroke="#c8102e" stroke-width="10"/>`;
       return `<svg viewBox="0 0 100 100" width="20" height="20">${body}</svg>`;
     };
-    G.signs.forEach(([la, ln, kind]) => {
-      const html = signSvg(kind);
-      if (html) L.marker([la / 1e5, ln / 1e5], { interactive: false, icon: L.divIcon({ className: "rsign", iconSize: [20, 20], iconAnchor: [10, 10], html }) }).addTo(signLayer);
+    // brg: yaklasan aracin gidis yonu -> isaretin "yukari"si o yone doner (ok surucuye gore okunur).
+    // Bir yaklasmanin butun yasaklari tek isarette yan yana ("no_left_turn,no_u_turn").
+    // "Yalniz duz" mavi oku yol boyunca tek yon gibi okunuyordu (operator, 15 Eki): sola + saga donulmez olarak cizilir.
+    const ORDER = ["only_left_turn", "only_right_turn", "no_left_turn", "no_straight_on", "no_right_turn", "no_u_turn"];
+    G.signs.forEach(([la, ln, kinds, brg]) => {
+      const ks = new Set(kinds.split(",").flatMap(k => k === "only_straight_on" ? ["no_left_turn", "no_right_turn"] : [k]));
+      const parts = ORDER.filter(k => ks.has(k)).map(signSvg).filter(Boolean);
+      if (!parts.length) return;
+      const svg = parts.join(""), w = 20 * parts.length;
+      const html = `<div style="display:flex;width:${w}px;transform:rotate(${brg || 0}deg) scale(var(--ss,1))">${svg}</div>`;
+      L.marker([la / 1e5, ln / 1e5], { interactive: false, icon: L.divIcon({ className: "rsign", iconSize: [w, 20], iconAnchor: [w / 2, 10], html }) }).addTo(signLayer);
     });
-    const vis = () => { if (map.getZoom() >= 16) signLayer.addTo(map); else signLayer.remove(); };
+    // Kalabalik kavsaklarda (Oxford Circus: 45 m icinde 8 yaklasma) isaretler uzaktan kucuk, yakinlastirinca buyur
+    const vis = () => {
+      const z = map.getZoom();
+      map.getContainer().style.setProperty("--ss", z >= 18 ? 1 : z >= 17 ? 0.8 : 0.65);
+      if (z >= 16) signLayer.addTo(map); else signLayer.remove();
+    };
     map.on("zoomend", vis);
     map.on("click", ev => tap(ev.latlng));
   }

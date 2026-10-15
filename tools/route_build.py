@@ -102,7 +102,7 @@ for i, e in enumerate(edges):
     at_node.setdefault(e["a"], []).append(i); at_node.setdefault(e["b"], []).append(i)
 
 # --- Donus yasaklari: (giris kenari, cikis kenari) cifti; yalnizca dugum uzerinden olanlar
-banned, signs, skipped, seen_signs = set(), [], 0, set()
+banned, signs, skipped, approach, placed = set(), [], 0, {}, []
 E5 = lambda x: round(x * 1e5)
 for rel in RELS:
     t = rel["tags"]; kind = t.get("restriction", "")
@@ -122,17 +122,33 @@ for rel in RELS:
     else:
         skipped += 1; continue
     for p in pairs: banned.add(p)
-    # Isaret kavsagin ustune degil, YAKLASILAN yolun uzerine (kavsaktan ~18 m geri) konur: hangi yonden
-    # gelene uygulandigi gorulsun. Ayni yere ayni isaret bir kez.
-    e = edges[ins[0]]
+    approach.setdefault((ins[0], v), set()).add(kind)
+
+# Isaret kavsagin ustune degil, YAKLASILAN yolun uzerine (kavsaktan ~18 m geri) konur: hangi yonden gelene
+# uygulandigi gorulsun. Bir yaklasmanin butun yasaklari TEK isarette toplanir (OSM ayni kavsak icin ayri kayitlar
+# tutuyor; Oxford Circus'ta 14 isaret ust uste biniyordu). Isaret yaklasma yonune dondurulur (gelen aracin gidis
+# yonu, kuzeyden saat yonunde derece) ve gidis yonunun SOLUNA (UK) 5 m kaydirilir: cift yonlu yolda hangi seride
+# ait oldugu gorulsun. Baska bir isarete 12 m'den yakin duserse yol boyunca geriye kaydirilir.
+for (ei, v), kinds in sorted(approach.items()):
+    e = edges[ei]
     g = e["geom"] if e["b"] == v else e["geom"][::-1]  # g[-1] = kavsak
-    back, pos = 18.0, g[-1]
-    for k in range(len(g) - 1, 0, -1):
-        L = dist(g[k], g[k - 1])
-        if L >= back: t = back / L; pos = (g[k][0] + t * (g[k - 1][0] - g[k][0]), g[k][1] + t * (g[k - 1][1] - g[k][1])); break
-        back -= L; pos = g[k - 1]
-    sk = (round(pos[0], 5), round(pos[1], 5), kind)
-    if sk not in seen_signs: seen_signs.add(sk); signs.append([E5(pos[0]), E5(pos[1]), kind])
+    def place(back):
+        pos, seg = g[-1], (g[-2], g[-1])
+        for k in range(len(g) - 1, 0, -1):
+            L = dist(g[k], g[k - 1]); seg = (g[k - 1], g[k])
+            if L >= back: t = back / L; pos = (g[k][0] + t * (g[k - 1][0] - g[k][0]), g[k][1] + t * (g[k - 1][1] - g[k][1])); break
+            back -= L; pos = g[k - 1]
+        dx, dy = (seg[1][1] - seg[0][1]) * KX, (seg[1][0] - seg[0][0]) * KY  # metre: dogu, kuzey
+        n = math.hypot(dx, dy) or 1
+        pos = (pos[0] + 5.0 * dx / n / KY, pos[1] - 5.0 * dy / n / KX)  # sola 5 m: (dogu, kuzey) -> (-kuzey, dogu)
+        return pos, math.degrees(math.atan2(dx, dy)) % 360
+    back = 18.0
+    pos, brg = place(back)
+    for _ in range(4):
+        if all(dist(pos, q) >= 12 for q in placed): break
+        back += 12; pos, brg = place(back)
+    placed.append(pos)
+    signs.append([E5(pos[0]), E5(pos[1]), ",".join(sorted(kinds)), round(brg)])
 print("banned pairs", len(banned), "restriction signs", len(signs), "skipped", skipped)
 
 def simplify(g, tol=2.5):
