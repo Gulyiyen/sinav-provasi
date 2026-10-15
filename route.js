@@ -322,7 +322,9 @@
     const turnTxt = t => `${t.from || "isimsiz yol"} → ${t.to || "isimsiz yol"} (${TURN_TR[t.kind]} dönüş yasak)`;
     out.uTurns = uTurnsIn(steps).map(i => ({ n: steps[i].from, name: G.edges[steps[i - 1].e].name || "isimsiz yol" }));
     ded(!out.uTurns.length, "U dönüşü yok.", `U dönüşü yapıldı: ${[...new Set(out.uTurns.map(u => u.name))].join(", ")}. Sınavda U dönüşü ile rota çizilmez.`, Math.min(8, 4 * out.uTurns.length));
-    ded(!out.bannedAt.length, "Yasak dönüş yok.", `Yasak dönüş yapıldı: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi.`, Math.min(12, 4 * out.bannedAt.length));
+    // Donus yasagi PUAN KIRMAZ, uyarir (operator, 15 Eki): haritada gorunmuyor, veride hata olabilir ve kurallar sik
+    // degisiyor; yanlis veriyle haksiz puan kirmak, hic uyarmamaktan kotu. Model rota yine de yasaklardan kacinir.
+    if (out.bannedAt.length) out.items.push(["warn", `Dikkat – bu kavşakta dönüş yasağı olabilir: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi. Puan kırılmadı; gerçek yolda tabelaya bakın.`, 0]);
     if (q.closed) ded(!out.closedUsed.length, `Kapalı yol (${q.closedName}) kullanılmadı.`, `KAPALI yol kullanıldı: ${q.closedName}.`, 8);
     const um = Math.round(stepLen(steps)), bm = Math.round(stepLen(q.best.steps));
     if (reversed || !atA(first) || !atB(last)) {
@@ -549,7 +551,7 @@
     draw(res);
     const f = $("route-feedback"); f.innerHTML = "";
     const h = document.createElement("b"); h.textContent = `Puan: ${res.pts} / ${MAX}`; f.append(h);
-    res.items.forEach(([k, t]) => { const p = document.createElement("p"); p.className = k === "ok" ? "ok" : "tip"; p.textContent = (k === "ok" ? "✓ " : "✗ ") + t; f.append(p); });
+    res.items.forEach(([k, t]) => { const p = document.createElement("p"); p.className = k === "ok" ? "ok" : "tip"; p.textContent = (k === "ok" ? "✓ " : k === "warn" ? "⚠ " : "✗ ") + t; f.append(p); });
     const lg = document.createElement("p"); lg.className = "ref";
     lg.textContent = "Haritada: mavi = sizin rotanız, kırmızı = kurala aykırı kısım, yeşil = en direkt yasal rota. Puan kesintileri tahminidir (TfL dağılımı yayınlamıyor); kriterler TfL rehberinden. Değerlendirici ana yolları kullanan makul bir alternatifi de kabul edebilir.";
     f.append(lg); f.hidden = false;
