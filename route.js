@@ -99,16 +99,60 @@
       if (a < h.length && h[a][0] < h[m][0]) m = a; if (b < h.length && h[b][0] < h[m][0]) m = b; if (m === i) break; [h[m], h[i]] = [h[i], h[m]]; i = m; } } return t; },
     get size() { return h.length; } }; }
 
+  // --- U donusu ---
+  // Ayri seritli yollarda (Kingsway, Euston Road, Cockspur Street) OSM iki yonu ayri tek yonlu yol olarak tutar; aradaki
+  // 10-30 m'lik gecitten karsi seride gecmek motor icin iki normal donustu -> en iyi rotalarin ~%10'u gercekte
+  // yapilamayan U donusu iceriyordu (operator, 15 Eki: Kingsway). Simdi: yon 150 dereceden fazla tersine donerse U sayilir;
+  // tek kavsakta ya da toplam <=40 m kisa parcalar (<=30 m) zinciri uzerinden. Cikmaz sokakta donmek serbest.
+  const U_DEG = 150, SHORT = 30, CHAIN = 40;
+  const brgCache = new Map();
+  function edgeBrg(e, n, arriving) {  // e kenarinin n kavsagindaki yonu: varirken (arriving) ya da cikarken
+    const k = e + (arriving ? "<" : ">") + n;
+    if (!brgCache.has(k)) {
+      const E = G.edges[e], p = E.a === n ? E.pts : E.pts.slice().reverse();  // p[0] = n
+      brgCache.set(k, arriving ? brgOf(p[1], p[0]) : brgOf(p[0], p[1]));
+    }
+    return brgCache.get(k);
+  }
+  const isU = (b1, b2) => Math.abs((b2 - b1 + 540) % 360 - 180) > U_DEG;
+  // ein ile n'ye gelindi; ref = son CHAIN metre icinde gidilen yonler [{b, d, id}] (yoksa null). e'ye cikmak U mu?
+  // (Tek bir "zincir basi" yetmiyordu: Cockspur Street 8+8+12 m parcalardan sonra 29 m gecit -> zincir sifirlaniyordu.)
+  const uAt = (ein, n, e, ref) => {
+    if (G.adj[n].length < 2 || ein < 0) return false;
+    const out = edgeBrg(e, n, false);
+    return isU(edgeBrg(ein, n, true), out) || (ref !== null && ref.some(r => isU(r.b, out)));
+  };
+  // e ile n'den gecildikten sonra: e kisaysa (<=SHORT) gelinen yon ve son CHAIN metredeki yonler hatirlanir
+  function nextRef(ein, n, e, ref) {
+    const L = G.edges[e].len;
+    if (L > SHORT || ein < 0) return null;
+    const keep = (ref || []).map(r => ({ b: r.b, d: r.d + L, id: r.id })).filter(r => r.d <= CHAIN);
+    keep.push({ b: edgeBrg(ein, n, true), d: L, id: ein });
+    return keep;
+  }
+  const refKey = ref => (ref ? ref.map(r => r.id).join(".") : "");
+  // Bir adim dizisindeki U donusleri (puanlama): U'nun yapildigi adimlarin indeksleri
+  function uTurnsIn(steps) {
+    const out = []; let ref = null;
+    for (let i = 1; i < steps.length; i++) {
+      const n = steps[i].from, ein = steps[i - 1].e;
+      if (uAt(ein, n, steps[i].e, ref)) { out.push(i); ref = null; continue; }
+      ref = nextRef(ein, n, steps[i].e, ref);
+    }
+    return out;
+  }
+
   // En direkt YASAL rota: kenar tabanli Dijkstra (donus yasaklari icin gelinen kenar da durumun parcasi)
   // sources/targets: Map(kavsak -> isarete kus ucusu uzaklik). Bu "yurume payi" maliyete eklenir: rota isaretin
   // DIBINDE baslar/biter, 100 m'lik bolgenin kenarinda degil. (Eskiden varis bolgesine ilk girilen kavsakta bitiyordu.)
+  // Durum = (gelinen kenar, kavsak, kisa parca zincirinin basladigi kenar): U donusu zincir uzerinden de yakalanir.
   function bestRoute(sources, targets, closed) {
     const dist = new Map(), prev = new Map(), H = Heap();
-    const key = (e, n) => e + ">" + n;
-    sources.forEach((g, s) => { dist.set(key(-1, s), g); H.push(g, [-1, s]); });
+    const key = (e, n, ref) => e + ">" + n + ">" + refKey(ref);
+    sources.forEach((g, s) => { dist.set(key(-1, s, null), g); H.push(g, [-1, s, null]); });
     while (H.size) {
-      const [c, [ein, n, fin]] = H.pop();
-      const k = key(ein, n);
+      const [c, [ein, n, ref, fin]] = H.pop();
+      const k = key(ein, n, ref);
       if (fin) {
         const path = []; let cur = k;
         while (prev.has(cur)) { const p = prev.get(cur); path.push(p.step); cur = p.from; }
@@ -116,15 +160,17 @@
         return { steps, cost: stepCost(steps), total: c };
       }
       if (c > dist.get(k)) continue;
-      if (targets.has(n)) H.push(c + targets.get(n), [ein, n, true]);
+      if (targets.has(n)) H.push(c + targets.get(n), [ein, n, ref, true]);
       for (const e of G.adj[n]) {
         if (closed && closed.has(e)) continue;
         if (!legal(e, n)) continue;
         if (ein >= 0 && G.banned.has(ein + "," + e)) continue;
-        if (e === ein && G.adj[n].length > 1) continue;  // ayni yoldan geri donus yok (cikmaz sokak haric)
-        const m = other(e, n), E = G.edges[e];
-        const nc = c + E.len * (E.minor ? MINOR_COST : 1), nk = key(e, m);
-        if (nc < (dist.has(nk) ? dist.get(nk) : Infinity)) { dist.set(nk, nc); prev.set(nk, { from: k, step: { e, from: n } }); H.push(nc, [e, m]); }
+        // En iyi rota hic geri donmez - cikmaz sokakta da (kapali yol sorusunda Thornhaugh Street'e girip donuyordu)
+        if (e === ein) continue;
+        if (uAt(ein, n, e, ref)) continue;
+        const m = other(e, n), E = G.edges[e], r2 = nextRef(ein, n, e, ref);
+        const nc = c + E.len * (E.minor ? MINOR_COST : 1), nk = key(e, m, r2);
+        if (nc < (dist.has(nk) ? dist.get(nk) : Infinity)) { dist.set(nk, nc); prev.set(nk, { from: k, step: { e, from: n } }); H.push(nc, [e, m, r2]); }
       }
     }
     return null;
@@ -134,11 +180,11 @@
   // aday kural disi yola sik sik dokunursa o yol cizilir ve puanlamada yakalanir.
   function hop(s, t, closed) {
     const dist = new Map(), prev = new Map(), H = Heap();
-    const key = (e, n) => e + ">" + n;
-    dist.set(key(-1, s), 0); H.push(0, [-1, s, 0]);
+    const key = (e, n, ref) => e + ">" + n + ">" + refKey(ref);
+    dist.set(key(-1, s, null), 0); H.push(0, [-1, s, 0, null]);
     while (H.size) {
-      const [c, [ein, n, len]] = H.pop();
-      const k = key(ein, n);
+      const [c, [ein, n, len, ref]] = H.pop();
+      const k = key(ein, n, ref);
       if (c > dist.get(k) || len > HOP_SEARCH) continue;
       if (n === t) {
         const p = []; let cur = k;
@@ -152,8 +198,10 @@
         let w = E.len;
         if (!legal(e, n) || (closed && closed.has(e))) w = w * 1.5 + 15;
         if (ein >= 0 && G.banned.has(ein + "," + e)) w += 40;
-        const nc = c + w, nk = key(e, m);
-        if (nc < (dist.has(nk) ? dist.get(nk) : Infinity)) { dist.set(nk, nc); prev.set(nk, { from: k, step: { e, from: n } }); H.push(nc, [e, m, len + E.len]); }
+        if (uAt(ein, n, e, ref)) w += 60;  // aday karsi seride dokunsa bile birlestirme kendiliginden U uydurmasin
+        const r2 = nextRef(ein, n, e, ref);
+        const nc = c + w, nk = key(e, m, r2);
+        if (nc < (dist.has(nk) ? dist.get(nk) : Infinity)) { dist.set(nk, nc); prev.set(nk, { from: k, step: { e, from: n } }); H.push(nc, [e, m, len + E.len, r2]); }
       }
     }
     return null;
@@ -263,6 +311,8 @@
     ded(!ww.length, "Tek yönlü yollara uyuldu.", `Tek yönlü yolda TERS yöne gidildi: ${ww.join(", ")}.`, Math.min(12, 4 * ww.length));
     const TURN_TR = { no_left_turn: "sola", no_right_turn: "sağa", no_u_turn: "U", no_straight_on: "düz" };
     const turnTxt = t => `${t.from || "isimsiz yol"} → ${t.to || "isimsiz yol"} (${TURN_TR[t.kind]} dönüş yasak)`;
+    out.uTurns = uTurnsIn(steps).map(i => ({ n: steps[i].from, name: G.edges[steps[i - 1].e].name || "isimsiz yol" }));
+    ded(!out.uTurns.length, "U dönüşü yok.", `U dönüşü yapıldı: ${[...new Set(out.uTurns.map(u => u.name))].join(", ")}. Sınavda U dönüşü ile rota çizilmez.`, Math.min(8, 4 * out.uTurns.length));
     ded(!out.bannedAt.length, "Yasak dönüş yok.", `Yasak dönüş yapıldı: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi.`, Math.min(12, 4 * out.bannedAt.length));
     if (q.closed) ded(!out.closedUsed.length, `Kapalı yol (${q.closedName}) kullanılmadı.`, `KAPALI yol kullanıldı: ${q.closedName}.`, 8);
     const um = Math.round(stepLen(steps)), bm = Math.round(stepLen(q.best.steps));
@@ -393,6 +443,8 @@
     if (res) q.best.steps.forEach(s => L.polyline(stepPts(s), { color: "#1fb36b", weight: 10, opacity: 0.55, interactive: false }).addTo(layers));
     const bad = new Set(res ? res.wrongWay.concat(res.closedUsed) : []);
     steps.forEach(s => L.polyline(stepPts(s), { color: bad.has(s.e) ? "#e5484d" : "#2563eb", weight: 5, opacity: 0.95, interactive: false }).addTo(layers));
+    if (res) res.uTurns.forEach(u => L.marker(G.nodes[u.n], { interactive: false, zIndexOffset: 1000,
+      icon: L.divIcon({ className: "", iconSize: [26, 26], iconAnchor: [13, 13], html: `<div class="uturn">U</div>` }) }).addTo(layers));
     if (res) res.bannedTurns.forEach(t => {
       L.circleMarker(G.nodes[t.n], { radius: 12, color: "#e5484d", weight: 4, fill: false }).addTo(layers);
       const icon = signIcon(t.kind, t.brg);  // yalniz ihlal edilen yasagin isareti, gelis yonune donuk
@@ -491,5 +543,5 @@
   $("route-submit").onclick = submit;
   $("route-next").onclick = next;
   $("route-trbtn").onclick = () => { const t = $("route-tr"); t.hidden = !t.hidden; };
-  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, map: () => map };  // test icin
+  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, turnOf, uTurnsIn, debugPlaces: () => places(), map: () => map };  // test icin
 })();

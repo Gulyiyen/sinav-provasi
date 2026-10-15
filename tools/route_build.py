@@ -13,10 +13,12 @@ def dist(a, b): return math.hypot((a[1] - b[1]) * KX, (a[0] - b[0]) * KY)
 def drivable(t):
     if t.get("area") == "yes": return False
     mv = t.get("motor_vehicle") or t.get("motorcar")
-    if mv in ("no", "private", "permit", "delivery", "agricultural"): return False
-    if mv in ("yes", "designated", "destination", "permissive"): return True
-    if t.get("vehicle") in ("no", "private"): return False
-    if t.get("access") in ("no", "private"): return False
+    # "destination" = yalniz oraya gidecek arac (teslimat/erisim): gecis rotasi olamaz. Yayalastirilan eski Strand
+    # (St Mary le Strand cevresi, 2022) boyle etiketli; eskiden serbest sayildigi icin en iyi rota oradan geciyordu.
+    if mv in ("no", "private", "permit", "delivery", "agricultural", "destination"): return False
+    if mv in ("yes", "designated", "permissive"): return True
+    if t.get("vehicle") in ("no", "private", "destination"): return False
+    if t.get("access") in ("no", "private", "destination"): return False
     return True
 def oneway(t):
     o = t.get("oneway")
