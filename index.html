@@ -149,6 +149,8 @@
   .rowbtn .small { flex: 1; }
   .rowbtn .small.go { background: var(--green); border-color: var(--green); font-weight: 700; }
 </style>
+<!-- Ziyaret sayaci: GoatCounter (cerezsiz, kisisel veri tutmaz). Kanal olcumu: linke ?ref=facebook gibi ek. -->
+<script data-goatcounter="https://sinavprovasi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
 <div class="app">
@@ -785,6 +787,8 @@
     } catch (_) {}
     const from = cur; cur = id;
     if (from !== id) window.dispatchEvent(new CustomEvent("screenleave", { detail: from }));
+    // Hangi bolum kullaniliyor (SERU, harita, konusma): her ekran acilisi sayaca olay olarak gider
+    if (from !== id && window.goatcounter && window.goatcounter.count) try { window.goatcounter.count({ path: "ekran/" + id, title: id, event: true }); } catch (_) {}
   }
   window.showScreen = show;
   try { history.replaceState({ s: "s-home" }, ""); } catch (_) {}
