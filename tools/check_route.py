@@ -80,6 +80,15 @@ with sync_playwright() as p:
     bad = [t for t in taps if t["pts"] != 22]
     check(not bad, f"haritaya dokunarak en iyi rotayi izleyen aday tam puan: {len(taps) - len(bad)} / {len(taps)} {bad[:2]}")
 
+    # Seyrek dokunan aday (uzaktan bakarken ~400 m arayla): dokunuslar reddedilmemeli (600 m siniri iken %75'i reddediliyordu)
+    sp = pg.evaluate('''() => { const R = __route, G = R.graph(); let ok = 0, n = 0;
+      for (let i = 0; i < 40; i++) { const q = R.makeQuestion("long"); if (!q) continue;
+        let acc = 0, a = q.best.steps[0].from, before = [];
+        for (const s of q.best.steps) { before.push(s); acc += G.edges[s.e].len;
+          if (acc >= 450) { const to = R.lastNode([s]); n++; const h = R.hop(a, to, null, before.slice(0, -1).length ? before.slice(0, before.length - 1) : []); if (h) ok++; a = to; acc = 0; } } }
+      return { ok, n }; }''')
+    check(sp["ok"] >= sp["n"] * 0.95, f"450 m arayla dokunan adayin dokunuslari alinir: {sp['ok']} / {sp['n']}")
+
     w = pg.evaluate('''() => { const R = __route, G = R.graph();
       let e1, e2, v;  // ortak kavsagi olan ilk yasak cift
       for (const k of G.banned) { [e1, e2] = k.split(",").map(Number); const A = G.edges[e1], B = G.edges[e2];

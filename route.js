@@ -8,9 +8,10 @@
   const MAX = 22;                  // 66 / 3
   const MINOR_COST = 1.15;         // ara sokaklar biraz "pahali": en direkt rota ana yollari tercih etsin
   const TAP_PX = 34;               // dokunus bu kadar piksel icindeki kavsaga oturur
-  // Iki dokunus arasi: en fazla 600 m YA DA en fazla 6 yol parcasi (The Mall gibi uzun, az kavsakli yollar serbest;
-  // yalnizca basa ve sona dokunup rotayi sisteme cizdirmek engellenir)
-  const MAX_HOP = 600, MAX_HOP_EDGES = 6, HOP_SEARCH = 3000;
+  // Iki dokunus arasi: en fazla 1000 m YA DA en fazla 6 yol parcasi (The Mall gibi uzun, az kavsakli yollar serbest;
+  // yalnizca basa ve sona dokunup rotayi sisteme cizdirmek engellenir). 600 m iken (operator, 16 Eki: 'cizerken bazen
+  // takiliyor, cizmiyor') kus ucusu 300-400 m arayla dokunuslarin %39'u, 400-500 m'de %75'i sessizce reddediliyordu.
+  const MAX_HOP = 1000, MAX_HOP_EDGES = 6, HOP_SEARCH = 3000;
   // Isaret bir kavsak degil bir YER: yerin cevresindeki her kavsak baslangic/varis sayilir.
   // (Tek kavsaga oturtunca Piccadilly Circus gibi tek yonlu meydanlarda 'en iyi rota' meydani dolasiyordu.)
   const R_START = 80, R_END = 100;
@@ -473,6 +474,7 @@
     map.stop(); map.invalidateSize();  // onceki rotanin harita animasyonu bitmeden dokunus yanlis kavsaga oturmasin
     map.fitBounds([q.A.p, q.B.p], { padding: [40, 40], animate: false });
     draw();
+    $("route-status").classList.remove("refused");
     $("route-status").textContent = "Yeşil işarete dokunarak başlayın, sonra yol boyunca kavşak kavşak dokunun.";
   }
 
@@ -516,16 +518,24 @@
       const d = p.distanceTo(map.latLngToContainerPoint(n));
       if (d < bd) { bd = d; best = i; }
     });
-    if (best < 0) { $("route-status").textContent = "Oraya yakın bir kavşak yok – yolun üzerine, kavşağa yakın dokunun (gerekirse büyütün)."; return; }
+    if (best < 0) { refuse("Oraya yakın bir kavşak yok – yolun üzerine, kavşağa yakın dokunun (gerekirse büyütün).", ll); return; }
     if (taps.length && taps[taps.length - 1] === best) return;
     if (taps.length) {
       const h = onModel(taps[taps.length - 1], best) || hop(taps[taps.length - 1], best, qs[qi].closed, steps);
-      if (!h) { $("route-status").textContent = "Bu nokta önceki noktadan çok uzak. Yol boyunca daha sık dokunun."; return; }
+      if (!h) { refuse("Bu nokta önceki noktadan çok uzak – dokunuş alınmadı. Son mavi noktaya daha yakın bir kavşağa dokunun.", G.nodes[best]); return; }
       hops.push(h.steps.length); steps.push(...h.steps);
     }
     taps.push(best);
+    $("route-status").classList.remove("refused");
     $("route-status").textContent = taps.length === 1 ? "Başladınız. Yol boyunca dokunmaya devam edin; bitince “Rotayı bitir”." : "Devam edin. Yanlış dokunduysanız “Geri al”.";
     draw();
+  }
+  // Alinmayan dokunus GORUNSUN: eskiden yalniz kucuk gri yazi degisiyordu, aday "harita takildi" saniyordu
+  function refuse(msg, ll) {
+    const st = $("route-status"); st.textContent = msg; st.classList.remove("refused"); void st.offsetWidth; st.classList.add("refused");
+    const c = L.circleMarker(ll, { radius: 16, color: "#e5484d", weight: 3, fill: false, interactive: false }).addTo(map);
+    setTimeout(() => c.remove(), 900);
+    if (navigator.vibrate) try { navigator.vibrate(60); } catch (e) {}
   }
   // Aday model rotanin uzerindeki kavsaklara sirayla dokunuyorsa ve simdiye kadar da model rotadaysa, arasi model
   // rotanin kendisidir. (Seyrek dokunusta iki dokunus arasindaki en kisa yol, model rotanin bir sonraki donusu icin
