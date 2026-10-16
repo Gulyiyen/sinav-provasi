@@ -253,15 +253,23 @@
     }).filter(Boolean);
   }
   const rnd = a => a[Math.floor(Math.random() * a.length)];
+  // Bu yollardan gecen / bu yollarda baslayip biten sorular uretilmez (operator, 16 Eki: Kingsway sorularini cikar)
+  const AVOID = new Set(["Kingsway"]);
+  const avoided = steps => steps.some(s => AVOID.has(G.edges[s.e].name));
+  const onAvoided = nodes => [...nodes].some(n => G.adj[n].some(e => AVOID.has(G.edges[e].name)));
   function makeQuestion(kind) {
     const P = places();
     const [lo, hi] = kind === "long" ? [2500, 4200] : [900, 1700];
     for (let t = 0; t < 300; t++) {
       const A = rnd(P), B = rnd(P);
       if (A === B || meters(A.p, B.p) < 500) continue;
-      if (A.n.split(" ")[0] === B.n.split(" ")[0]) continue;  // "Marble Arch" / "Marble Arch station" gibi
+      // "Marble Arch" / "Marble Arch station", "Covent Garden Market" / "Covent Garden station" gibi ayni yer; ilk kelimeye
+      // bakmak "Royal Opera House" / "Royal Albert Hall" gibi farkli yerleri de eliyordu
+      const base = n => n.replace(/ station$/, "");
+      if (A.n.startsWith(base(B.n)) || B.n.startsWith(base(A.n))) continue;
       const r = bestRoute(A.starts, B.ends);
-      if (!r) continue;
+      if (!r || avoided(r.steps)) continue;
+      if (onAvoided(A.starts.keys()) || onAvoided(B.ends.keys())) continue;
       const L = stepLen(r.steps);
       if (L < lo || L > hi) continue;
       const q = { kind, A, B, best: r, closed: null, closedName: "" };
@@ -277,7 +285,7 @@
         const touches = n => G.adj[n].some(e => closed.has(e));
         if ([...A.starts.keys()].some(touches) || [...B.ends.keys()].some(touches)) continue;
         const r2 = bestRoute(A.starts, B.ends, closed);
-        if (!r2 || stepLen(r2.steps) > L * 2) continue;
+        if (!r2 || avoided(r2.steps) || stepLen(r2.steps) > L * 2) continue;
         Object.assign(q, { best: r2, closed, closedName: name });
       }
       q.q = `What is the most direct route between ${A.n} (the green marker) and ${B.n} (the red marker)?` + (q.closedName ? ` NOTE: ${q.closedName} is CLOSED.` : "");

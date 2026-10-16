@@ -83,7 +83,9 @@ LM = ["Buckingham Palace", "Trafalgar Square", "Piccadilly Circus", "Marble Arch
       "Harrods", "Westminster Abbey", "Tower Bridge", "The Shard", "Bank of England", "Lord's Cricket Ground", "Madame Tussauds",
       "Elizabeth Tower (Big Ben)", "St Thomas' Hospital", "Guy's Hospital", "University College Hospital", "Royal Festival Hall",
       "Imperial War Museum", "Kensington Palace", "Emirates Stadium", "Battersea Power Station", "Smithfield Market"]
-places = [{"n": n, "k": "place", "p": [round(d["landmarks"][n]["lat"], 5), round(d["landmarks"][n]["lng"], 5)]} for n in LM]
+SHOW = {"The Savoy": "Savoy Hotel", "The Ritz": "Ritz Hotel", "The Dorchester": "Dorchester Hotel", "The Langham": "Langham Hotel", "Claridge's": "Claridge's Hotel", "Hilton London Park Lane": "Hilton Park Lane"}
+LM += [n for n in d["landmarks"] if n in ["The Savoy", "The Ritz", "The Dorchester", "Claridge's", "The Langham", "Royal Opera House", "London Palladium", "Selfridges", "Fortnum & Mason", "Somerset House", "Royal Courts of Justice", "British Library", "St Pancras International", "London Zoo", "Wallace Collection", "London Eye", "National Theatre", "Great Ormond Street Hospital", "Hilton London Park Lane", "Horse Guards Parade", "Sherlock Holmes Museum", "BBC Broadcasting House", "Royal Academy of Arts", "Old Vic Theatre", "Wigmore Hall", "St Mary's Hospital", "Eastman Dental Hospital", "Sadler's Wells Theatre"]]
+places = [{"n": SHOW.get(n, n), "k": "place", "p": [round(d["landmarks"][n]["lat"], 5), round(d["landmarks"][n]["lng"], 5)]} for n in LM]
 
 # istasyonlar: OSM adi -> gosterilen ad; ana hat istasyonlari "London X" adli dugumden
 ST_MAP = {"London Victoria": "Victoria station", "London Waterloo": "Waterloo station", "London Paddington": "Paddington station",

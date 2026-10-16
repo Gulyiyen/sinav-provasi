@@ -2,7 +2,7 @@
 # Gercek tarayicida (Playwright/Chromium) sayfayi acar. Bir kontrol bile kalirsa cikis kodu 1: yeni veri yayina cikmaz.
 # Kullanim: python tools/check_route.py [--quick]
 #   - en iyi rotayi birebir izleyen aday her soruda 22/22 alir
-#   - hicbir en iyi rotada U donusu yok
+#   - hicbir en iyi rotada U donusu yok; hicbir soru Kingsway'den gecmiyor
 #   - en iyi rota boyunca haritaya GERCEKTEN dokunan aday (0 ve 135 derece donuk harita) 22/22 alir
 #   - yasak donus puan kirmaz, uyari verir; harita ve isaretler hatasiz cizilir; konsol hatasi yok
 #   - veri boyutu oncekine gore makul (Overpass yarim cevap dondururse yakalanir)
@@ -57,15 +57,18 @@ with sync_playwright() as p:
     pg.evaluate('() => __route.start("short")')
     pg.wait_for_function("() => __route.graph() && __route.state().qs.length && window.AZMap && AZMap.data()", timeout=60000)
 
-    r = pg.evaluate('''(N) => { const R = __route, G = R.graph(), o = { n: 0, full: 0, u: 0, ww: 0, bad: [] };
+    r = pg.evaluate('''(N) => { const R = __route, G = R.graph(), o = { n: 0, full: 0, u: 0, ww: 0, bad: [], ks: [], pl: {} };
       for (const k of ["short", "closed", "long"]) for (let i = 0; i < N; i++) {
         const q = R.makeQuestion(k); if (!q) continue; o.n++;
         const s = q.best.steps, res = R.score(q, [s[0].from, R.lastNode(s)], s);
         if (res.pts === 22) o.full++; else if (o.bad.length < 3) o.bad.push(q.A.n + " -> " + q.B.n + ": " + res.items.filter(x => x[0] === "no").map(x => x[1]).join(" | "));
-        o.u += R.uTurnsIn(s).length; o.ww += res.wrongWay.length;
+        o.u += R.uTurnsIn(s).length; o.ww += res.wrongWay.length; o.pl[q.A.n] = 1; o.pl[q.B.n] = 1;
+        if (s.some(x => G.edges[x.e].name === "Kingsway") && o.ks.length < 3) o.ks.push(q.A.n + " -> " + q.B.n);
       } return o; }''', N)
     check(r["n"] >= N * 2.5, f"soru uretimi: {r['n']} / {N * 3}")
     check(r["full"] == r["n"], f"en iyi rotayi izleyen aday tam puan: {r['full']} / {r['n']} {r['bad']}")
+    check(not r["ks"], f"hicbir soru Kingsway'den gecmiyor (operator istegi) {r['ks']}")
+    print("     soruda kullanilan farkli yer:", len(r["pl"]))
     check(r["u"] == 0 and r["ww"] == 0, f"en iyi rotalarda U donusu {r['u']}, ters yon {r['ww']}")
 
     taps = []
