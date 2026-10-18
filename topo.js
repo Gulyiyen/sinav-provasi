@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // Harita (Topographical) - coktan secmeli kisim. Gercek sinavda 34 puan; rota cizme (66 puan) ayri, henuz yok.
 // Haritali sorular her seferinde topo-geo.js'deki OSM verisinden hesaplanir; cevap koordinattan gelir, elle yazilmaz.
 (() => {

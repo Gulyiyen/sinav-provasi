@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // SERU testi: hizli alistirma (10 soru, aninda aciklama) ve sinav provasi (37 soru, 45 dk).
 // Gercek sinavin dagilimi: 18 coktan secmeli + 17 cumle tamamlama + 2 okuma-anlama, gecme %60.
 (() => {

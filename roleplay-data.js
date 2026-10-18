@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // B1 Konusma - Bolum 2: rol yapma. Gercek sinavda (LanguageCert Practice Paper 3) iki durum var:
 //   1) gorevli baslatir ("I start.") - ROLEPLAYS; 2) ADAY baslatir ("You start.") - ROLEPLAYS_B.
 // Gercek sinavin durumlari gunluk hayattan (turist, arkadas, komsu, mudur, garson...); sofor durumlari ek pratik.

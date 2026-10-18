@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // SERU soru bankasi - ek set (2026-10-13). Kaynak ve kurallar seru-data.js ile ayni:
 // ilk secenek dogru, ekranda karistirilir; siklar benzer uzunlukta yazildi (en uzun sik ipucu olmasin).
 window.SERU = (window.SERU || []).concat([
@@ -55,7 +57,7 @@ window.SERU = (window.SERU || []).concat([
   { s: 2, q: "Your vehicle has an exemption from displaying licence discs. What must you, the driver, do?",
     o: ["Carry the exemption notice at all times when it is used as a PHV", "Display a handwritten sign in the window instead of the discs", "Tell each passenger about the exemption before they get in", "Nothing - the exemption is recorded on the TfL database"],
     tr: "Aracınızın lisans disklerini sergileme muafiyeti var. Sürücü olarak ne yapmalısınız?",
-    e: "Araç PHV olarak kullanıldığı her an muafiyet bildirgesini yanınızda taşımalısınız.", ee: "You must carry the exemption notice with you at all times when the vehicle is used as a PHV." },
+    e: "Araç PHV olarak kullanıldığı her an muafiyet bildirgesini yanınızda taşımalısınız.​‍‌⁠", ee: "You must carry the exemption notice with you at all times when the vehicle is used as a PHV.​‍‌⁠" },
   { s: 2, q: "A police officer asks for the insurance details of your PHV. What must you do?",
     o: ["Make the insurance details available to them", "Tell them to contact your operator instead", "Refuse unless you have been in a collision", "Give them your DVLA licence number only"],
     tr: "Polis PHV aracınızın sigorta bilgilerini istiyor. Ne yapmalısınız?",
@@ -245,7 +247,7 @@ window.SERU = (window.SERU || []).concat([
   { s: 7, q: "Before driving, you notice oil on the ground under your vehicle. What should you do?",
     o: ["Get the leak checked - fluids should not leak from the vehicle", "Ignore it, because a small amount of oil is completely normal", "Drive to your first booking and check it at the end of the day", "Cover it with sand and carry on with your shift as normal"],
     tr: "Yola çıkmadan aracınızın altında yerde yağ görüyorsunuz. Ne yapmalısınız?",
-    e: "Araç dışı kontrol: aracın altından yere sıvı (yağ, fren hidroliği) sızmamalı. Sızıntıyı kontrol ettirin.", ee: "This is an outside check: no fluid (oil, brake fluid) should leak onto the ground under the vehicle. Get the leak checked." },
+    e: "Araç dışı kontrol: aracın altından yere sıvı (yağ, fren hidroliği) sızmamalı. Sızıntıyı kontrol ettirin.​‍‌⁠", ee: "This is an outside check: no fluid (oil, brake fluid) should leak onto the ground under the vehicle. Get the leak checked.​‍‌⁠" },
   { s: 7, q: "Which of these is allowed on your vehicle's windows?",
     o: ["Approved signage only", "Any advertising stickers", "Your operator's posters", "Large tinted film strips"],
     tr: "Aracınızın camlarında hangisine izin verilir?",
@@ -429,7 +431,7 @@ window.SERU = (window.SERU || []).concat([
   { t: "fill", s: 7, q: "Please ask your passengers to check before they open their door, to make sure there isn't a ___ coming.",
     o: ["cyclist", "delivery van", "police car", "bus"],
     tr: "Yolculardan kapıyı açmadan önce bir ___ gelmediğinden emin olmak için kontrol etmelerini isteyin.",
-    e: "Kapı açmadan önce bisikletli kontrolü: hem yolculardan isteyin hem kendiniz yapın.", ee: "Check for cyclists before you open a door: ask your passengers to do it, and do it yourself too." },
+    e: "Kapı açmadan önce bisikletli kontrolü: hem yolculardan isteyin hem kendiniz yapın.​‍‌⁠", ee: "Check for cyclists before you open a door: ask your passengers to do it, and do it yourself too.​‍‌⁠" },
   { t: "fill", s: 7, q: "The clutch and brake pedals should have ___ covers.",
     o: ["anti-slip", "leather", "plastic", "colourful"],
     tr: "Debriyaj ve fren pedallarında ___ kaplama olmalıdır.",
@@ -461,10 +463,10 @@ window.SERU = (window.SERU || []).concat([
     o: ["Take the wallet to her operator and tell them as soon as possible", "Knock on every door in the building until she finds the owner", "Keep the wallet at home and wait for the passenger to call her", "Leave the wallet with the security guard at the nearest station"],
     tr: "Priya gece 11'de bir işi bitiriyor. Arka koltuğu kontrol ederken bir cüzdan buluyor. Yolcu büyük bir apartmana girmiş ve Priya hangi daire olduğunu bilmiyor. Priya ne yapmalı?",
     e: "Bulunan eşyayı operatöre götürün ve yolcu zaten aramış olabileceği için hemen haber verin. Operatör eşyayı saklar ve kaydını tutar.", ee: "Take the item to your operator and tell them straight away, because the passenger may already have called. The operator will keep the item and record it." },
-  { t: "read", s: 4, p: "During a journey, Tom's passenger starts tapping his fingers, raises his voice and stares at Tom angrily. He says the route is wrong, although it is the route the operator gave.",
-    q: "What is the best thing for Tom to do first?",
+  { t: "read", s: 4, p: "During a journey, Tobin's passenger starts tapping his fingers, raises his voice and stares at Tobin angrily. He says the route is wrong, although it is the route the operator gave.",
+    q: "What is the best thing for Tobin to do first?",
     o: ["Stay calm, listen, and explain the route without arguing", "Raise his own voice so the passenger knows who is in charge", "Stop at once and tell the passenger to get out in the road", "Ignore the passenger and drive faster to finish the journey"],
-    tr: "Yolculuk sırasında Tom'un yolcusu parmaklarını tıkırdatmaya başlıyor, sesini yükseltiyor ve Tom'a öfkeyle bakıyor. Rotanın yanlış olduğunu söylüyor, oysa rota operatörün verdiği rota. Tom önce ne yapmalı?",
+    tr: "Yolculuk sırasında Tobin'in yolcusu parmaklarını tıkırdatmaya başlıyor, sesini yükseltiyor ve Tobin'e öfkeyle bakıyor. Rotanın yanlış olduğunu söylüyor, oysa rota operatörün verdiği rota. Tobin önce ne yapmalı?",
     e: "Bunlar saldırganlık uyarı işaretleri. Sakin konuşun, sözünü kesmeden dinleyin, kaygısına cevap verin ve tartışmak yerine açıklayın. Durum kötüleşirse güvenli bir yerde durun.", ee: "These are warning signs of aggression. Speak calmly, listen without interrupting, answer their worries, and explain instead of arguing. If the situation gets worse, stop in a safe place." },
   { t: "read", s: 6, p: "At 23:30, Kemal's passenger asks him to stop on a red route so she can use a cashpoint. There are no pedestrian clearways, zig-zags or bus stops nearby.",
     q: "What can Kemal do?",
@@ -481,9 +483,9 @@ window.SERU = (window.SERU || []).concat([
     o: ["Politely refuse to share the other passenger's personal details", "Tell her only his street name, as long as it is in the same area", "Tell her, because both passengers are sharing the same journey", "Ask the next passenger to tell her himself when he gets in"],
     tr: "Grace paylaşımlı bir yolculuk yapıyor. İlk yolcusu olan genç bir kadın, Grace'e sıradaki yolcunun nerede oturduğunu ve genelde eve ne zaman geldiğini soruyor. Grace ne yapmalı?",
     e: "Bir yolcunun kişisel bilgilerini (adres, rutin) diğer yolcuyla asla paylaşmayın; bu bilgiler onu suça karşı savunmasız bırakabilir.", ee: "Never share one passenger's personal details (address, routine) with the other passenger. This information could make them vulnerable to crime." },
-  { t: "read", s: 9, p: "Dan picks up a 12-year-old boy for a school booking. The operator's notes say the boy's aunt will meet him at the school gate, but Dan does not know her name.",
-    q: "What should Dan do?",
+  { t: "read", s: 9, p: "Dorin picks up a 12-year-old boy for a school booking. The operator's notes say the boy's aunt will meet him at the school gate, but Dorin does not know her name.",
+    q: "What should Dorin do?",
     o: ["Contact his operator to get the name of the adult meeting the child", "Drop the boy at the gate and leave, because the school is safe", "Ask the boy to point out any adult he knows when they arrive", "Take the boy back home, because the booking details are wrong"],
-    tr: "Dan bir okul işi için 12 yaşında bir çocuğu alıyor. Operatörün notunda çocuğu okul kapısında teyzesinin karşılayacağı yazıyor ama Dan onun adını bilmiyor. Dan ne yapmalı?",
+    tr: "Dorin bir okul işi için 12 yaşında bir çocuğu alıyor. Operatörün notunda çocuğu okul kapısında teyzesinin karşılayacağı yazıyor ama Dorin onun adını bilmiyor. Dorin ne yapmalı?",
     e: "Refakatsiz bir çocuk taşırken operatörün haberi olmalı ve çocuğu karşılayacak yetişkinin adını bilmelisiniz; bu bilgiyi operatörünüz vermeli.", ee: "When you carry an unaccompanied child, your operator must know about it and you must know the name of the adult who will meet the child. Your operator should give you this information." }
 ]);

@@ -1,0 +1,9 @@
+Copyright (c) 2026 Sinav Provasi / Private Hire Test London. All rights reserved.
+
+The questions, explanations, speaking scripts, guides and source code in this
+repository are original work. No licence is granted to copy, modify, republish,
+sell or redistribute them, in whole or in part, without written permission.
+
+Exception: map and road data derived from OpenStreetMap (map-data.js,
+route-graph.js, topo-geo.js, data_raw/) is (c) OpenStreetMap contributors and
+available under the Open Database License (ODbL).

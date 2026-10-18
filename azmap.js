@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // Kendi sokak haritamiz (OSM verisi, map-data.js): harita karolari yerine canvas'a cizilir.
 // Atlas gorunumu fikri (renkli yol siniflari, HER sokakta ad, tek yon oklari) - renkler ve cizim bizim.
 // Neden: OSM karolari uzak yakinlikta kucuk sokak adlarini yazmiyordu (operator: 'Parker Street gibi kucuk yollari

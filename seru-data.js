@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // SERU soru bankasi - kaynak: TfL "Private Hire Vehicle Driver's Handbook" v1.0 (30 Eylul 2021).
 // Her soru: s = el kitabi bolumu, q = Ingilizce soru, o = secenekler (ILK secenek dogru; ekranda karistirilir),
 // tr = sorunun Turkcesi, e = Turkce aciklama. Sozluk (glossary) bolumunden soru yok: el kitabi orayi test etmiyor.
@@ -34,7 +36,7 @@ window.SERU = [
   { s: 1, q: "Your PHV driver's badge has been stolen. What should you do?",
     o: ["Report it to TfL immediately and to the police to get a crime reference number", "Keep working, and report it to TfL when you next renew your licence", "Tell your operator, who will report it to TfL and the police on your behalf later", "Wait seven days in case it is found, then report it to TfL"],
     tr: "PHV sürücü kartınız çalındı. Ne yapmalısınız?",
-    e: "Hemen TfL'e bildirin. Çalındıysa polise de bildirip suç referans numarası alın. Kart olmadan PHV sürücüsü olarak çalışamazsınız.", ee: "Tell TfL immediately. If it was stolen, tell the police too and get a crime reference number. You cannot work as a PHV driver without the badge." },
+    e: "Hemen TfL'e bildirin. Çalındıysa polise de bildirip suç referans numarası alın. Kart olmadan PHV sürücüsü olarak çalışamazsınız.​‍‌⁠", ee: "Tell TfL immediately. If it was stolen, tell the police too and get a crime reference number. You cannot work as a PHV driver without the badge.​‍‌⁠" },
   { s: 1, q: "TfL has replaced your lost badge, but then you find the original. What must you do?",
     o: ["Return the original badge to TfL", "Keep it as a spare in case you lose the new one", "Give it to your operator to keep on file", "Destroy it so that nobody else can use it"],
     tr: "TfL kaybolan kartınızın yerine yenisini verdi, sonra eskisini buldunuz. Ne yapmalısınız?",
@@ -176,7 +178,7 @@ window.SERU = [
   { s: 4, q: "Should you report an incident that almost happened but did not?",
     o: ["Yes - it is important to record and report near misses too", "No - you only need to report incidents where someone was actually hurt", "Only if a passenger complains", "Only if the police ask you"],
     tr: "Neredeyse olan ama olmayan bir olayı bildirmeli misiniz?",
-    e: "Evet. Gerçekleşen olaylar kadar neredeyse gerçekleşen olayları da kaydetmek ve bildirmek önemli.", ee: "Yes. It is as important to record and report near misses as it is to report incidents that actually happened." },
+    e: "Evet. Gerçekleşen olaylar kadar neredeyse gerçekleşen olayları da kaydetmek ve bildirmek önemli.​‍‌⁠", ee: "Yes. It is as important to record and report near misses as it is to report incidents that actually happened.​‍‌⁠" },
 
   // ---- Bolum 5: Surucu davranisi ----
   { s: 5, q: "You have a passenger's phone number from a booking. Can you contact them later to ask them out?",
@@ -376,7 +378,7 @@ window.SERU = [
   { s: 10, q: "What is ridesharing?",
     o: ["People who do not know each other paying separate fares and travelling together", "Two drivers sharing one vehicle and splitting the fares between them", "A family or a group of friends travelling together in one vehicle and paying one fare", "Two operators sharing the same booking to find a driver more quickly"],
     tr: "Ridesharing (paylaşımlı yolculuk) nedir?",
-    e: "Birbirini tanımayan kişilerin ayrı ücret ödeyip aynı araçta birlikte seyahat etmesi. Lisanslı Londra operatörü üzerinden ayarlanmalı.", ee: "It means people who do not know each other pay separate fares and travel together in the same vehicle. It must be arranged through a licensed London operator." },
+    e: "Birbirini tanımayan kişilerin ayrı ücret ödeyip aynı araçta birlikte seyahat etmesi. Lisanslı Londra operatörü üzerinden ayarlanmalı.​‍‌⁠", ee: "It means people who do not know each other pay separate fares and travel together in the same vehicle. It must be arranged through a licensed London operator.​‍‌⁠" },
   { s: 10, q: "When you pick up a ridesharing passenger, what should you do first?",
     o: ["Confirm that they have booked a ride-share", "Ask for their home address", "Introduce them to the other passengers by name", "Ask them to sit in the front"],
     tr: "Paylaşımlı yolculukta bir yolcuyu aldığınızda önce ne yapmalısınız?",

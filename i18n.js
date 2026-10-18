@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // Arayuz dili: "tr" (Turkce) ya da "en" (English). Sinav sorulari her iki dilde de Ingilizce kalir.
 // Secim sirasi: ?lang=en|tr linki > kullanicinin onceki secimi > tarayici dili Turkce ise tr, degilse en.
 // Statik metin: HTML ogesine data-en="..." yazilir, en ise innerHTML onunla degisir.

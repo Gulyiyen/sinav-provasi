@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // Harita (Topographical) - elle yazilan sorular: trafik isaretleri ve rota planlama dogru/yanlis.
 // Haritali sorular (pusula, kare, sokak, yol numarasi) topo.js icinde topo-geo.js verisinden uretilir.
 // Isaretler Highway Code'daki Ingiltere isaretlerinin sade cizimleri (SVG, viewBox 0 0 100 100).
@@ -35,9 +37,9 @@
       ee: "A white arrow in a blue rectangle means a one-way street, and traffic flows in the direction of the arrow. A blue RECTANGLE gives information; a blue CIRCLE gives an order. One-way streets are shown with an arrow on the map, so do not plan a route against the arrow." },
     { a: "Ahead only", tr: "Sadece ileri",
       svg: svg(`<circle cx="50" cy="50" r="46" fill="${BLUE}"/><path d="M50 82 V36" stroke="#fff" stroke-width="10"/><polygon points="34,40 50,18 66,40" fill="#fff"/>`),
-      e: "Mavi daire = zorunlu (emir). Yukarı ok = sadece düz gidebilirsiniz; sağa da sola da dönemezsiniz.",
+      e: "Mavi daire = zorunlu (emir). Yukarı ok = sadece düz gidebilirsiniz; sağa da sola da dönemezsiniz.​‍‌⁠",
 
-      ee: "A blue circle means a must (an order). An arrow pointing up means you can only go straight ahead; you cannot turn right or left." },
+      ee: "A blue circle means a must (an order). An arrow pointing up means you can only go straight ahead; you cannot turn right or left.​‍‌⁠" },
     { a: "Turn left ahead", tr: "İleriden sola dönün (zorunlu)",
       svg: svg(`<circle cx="50" cy="50" r="46" fill="${BLUE}"/><path d="M62 82 V52 H40" fill="none" stroke="#fff" stroke-width="10"/><polygon points="44,36 22,52 44,68" fill="#fff"/>`),
       e: "Mavi daire = zorunlu. Sola kıvrılan ok = ileride sola dönmek zorundasınız. (Kırmızı çerçeve olsaydı yasak anlamına gelirdi.)",
@@ -106,9 +108,9 @@
 
       ee: "True. Up is north, down is south, right is east and left is west." },
     { q: "On a map, east is to the left.", a: false, tr: "Haritada doğu sol taraftadır.",
-      e: "Yanlış. Doğu SAĞ taraftadır, batı sol. Hatırlama yolu: saat yönünde Kuzey–Doğu–Güney–Batı (N–E–S–W).",
+      e: "Yanlış. Doğu SAĞ taraftadır, batı sol. Hatırlama yolu: saat yönünde Kuzey–Doğu–Güney–Batı (N–E–S–W).​‍‌⁠",
 
-      ee: "False. East is on the RIGHT and west is on the left. A way to remember: clockwise it is North, East, South, West (N-E-S-W)." },
+      ee: "False. East is on the RIGHT and west is on the left. A way to remember: clockwise it is North, East, South, West (N-E-S-W).​‍‌⁠" },
     { q: "North-west is between north and west.", a: true, tr: "Kuzeybatı, kuzey ile batının arasındadır.",
       e: "Doğru. Haritada sol üst köşe yönü = kuzeybatı (North-west).",
 

@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // Harita - ROTA CIZME (gercek sinavda 66 puan: 3 soru - kisa, yol kapatmali kisa, uzun).
 // Yol agi route-graph.js'te (OSM: tek yonler + donus yasaklari); ilk kullanimda yuklenir.
 // Aday haritaya kavsak kavsak dokunur; her dokunus en yakin kavsaga oturur, iki dokunus arasi yol boyunca birlesir.

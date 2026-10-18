@@ -1,3 +1,5 @@
+// (c) 2026 Sinav Provasi / Private Hire Test London. Tum haklari saklidir - All rights reserved.
+// Sorular, aciklamalar ve kod ozgundur; izinsiz kopyalanamaz, yeniden yayinlanamaz.
 // B1 Konusma - Bolum 3 ve 4. Format: LanguageCert TfL Qualification Handbook + Practice Paper 3 (icerik OZGUN, kopya degil).
 // Bolum 3: gorev kagidi (5 resimli secenek + "Anything else?") uzerinden birlikte karar verme.
 //   Yapay zeka yok: gorevlinin replikleri adayin cevabindan bagimsiz anlamli olmali. lines = [gorevli, ornek cevap].
