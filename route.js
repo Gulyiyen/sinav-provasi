@@ -255,14 +255,15 @@
       return { n: p.n, k: p.k, p: p.p, bd, rs, re, starts: gap(within(rs)), ends: gap(within(re)) };
     }).filter(Boolean);
   }
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  let rand = Math.random;  // Route Challenge'ta ayin tohumlu ureteci: o ay herkes ayni rotalari gorur
+  const rnd = a => a[Math.floor(rand() * a.length)];
   // Bu yollardan gecen / bu yollarda baslayip biten sorular uretilmez (operator, 16 Eki: Kingsway sorularini cikar)
   const AVOID = new Set(["Kingsway"]);
   const avoided = steps => steps.some(s => AVOID.has(G.edges[s.e].name));
   const onAvoided = nodes => [...nodes].some(n => G.adj[n].some(e => AVOID.has(G.edges[e].name)));
   function makeQuestion(kind) {
     const P = places();
-    const [lo, hi] = kind === "long" ? [2500, 4200] : [900, 1700];
+    const [lo, hi] = kind === "long" || kind === "closedlong" ? [2500, 4200] : [900, 1700];
     for (let t = 0; t < 300; t++) {
       const A = rnd(P), B = rnd(P);
       if (A === B || meters(A.p, B.p) < 500) continue;
@@ -276,7 +277,7 @@
       const L = stepLen(r.steps);
       if (L < lo || L > hi) continue;
       const q = { kind, A, B, best: r, closed: null, closedName: "" };
-      if (kind === "closed") {
+      if (kind === "closed" || kind === "closedlong") {
         // En direkt rotanin uzerindeki, adi olan bir yolu (tum uzunluguyla) kapat
         const seen = {};
         r.steps.forEach(s => { const E = G.edges[s.e]; if (E.name && !/^[AB]\d/.test(E.name)) seen[E.name] = (seen[E.name] || 0) + E.len; });
@@ -357,7 +358,7 @@
 
   // --- Ekran ---
   let qs = [], qi = 0, taps = [], steps = [], hops = [], results = [], mode = "single", done = false;
-  const KIND_TR = T({ short: "Kısa rota", closed: "Kısa rota – yol kapalı", long: "Uzun rota" }, { short: "Short route", closed: "Short route – road closed", long: "Long route" });
+  const KIND_TR = T({ short: "Kısa rota", closed: "Kısa rota – yol kapalı", long: "Uzun rota", closedlong: "Uzun rota – yol kapalı" }, { short: "Short route", closed: "Short route – road closed", long: "Long route", closedlong: "Long route – road closed" });
 
   function ensureMap() {
     if (map) return;
@@ -441,10 +442,25 @@
   const ROUNDEL = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="8.5" fill="none" stroke="#dc241f" stroke-width="4.5"/><rect x="1" y="9.5" width="22" height="5" fill="#0019a8"/></svg>`;
   const placeIcon = P => L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: P.k === "station" ? ROUNDEL : `<div class="pdot"></div>` });
 
-  const isExam = () => mode.startsWith("exam");
+  const isExam = () => mode.startsWith("exam") || mode === "challenge";
+  // ROUTE CHALLENGE: her ay 5 zor rota (uzun + uzun yol kapali), grubun sabitli gonderisindeki aylik kodla acilir.
+  // Gercek kilit DEGIL (kod istemcide kontrol edilir); amac gruba uye cekmek. Kodlar repoda yok, yalniz ozetleri var.
+  const CH_HASH = {"2026-10":"2bdde0cad5890bb1","2026-11":"9fa7b0faacc45eed","2026-12":"cdd99baa39773a47","2027-01":"704a6347ac97a5da","2027-02":"306de63c0aae1ec7","2027-03":"ca7e7086682ff3cd","2027-04":"42ef2641dc057613","2027-05":"d9906d091fbee431","2027-06":"b15333c62e3e48c1","2027-07":"cf94ac9ef34c1b3b","2027-08":"c905c5a6b8f374f7","2027-09":"230f028013c0e8d0"};
+  const monthKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
+  function seeded(str) {  // mulberry32, tohum = ay
+    let a = 0; for (const c of str) a = Math.imul(a ^ c.charCodeAt(0), 2654435761) >>> 0;
+    return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  const roadChanges = q => { let n = 0, last = null; q.best.steps.forEach(s => { const nm = G.edges[s.e].name; if (nm && nm !== last) { n++; last = nm; } }); return n; };
+  async function codeOk(code) {
+    const h = CH_HASH[monthKey()]; if (!h || !code) return false;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`prc|${monthKey()}|${code.trim().toUpperCase()}`));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16) === h;
+  }
+  const chUnlocked = () => { try { return localStorage.getItem("route-challenge") === monthKey(); } catch (e) { return false; } };
   let lastExam = "exam";
   function startRoutes(m) {
-    mode = m; if (m.startsWith("exam")) lastExam = m;
+    mode = m; if (m.startsWith("exam") || m === "challenge") lastExam = m;
     if (!window.L) { alert(T("Harita yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin.", "The map could not load. Check your internet connection and refresh the page.")); return; }
     $("route-status").textContent = T("Harita yükleniyor…", "Loading map…");
     if (document.querySelector(".screen.on").id !== "s-route") show("s-route");  // "Yeni rota": ayni ekran, gecmise yazma
@@ -452,7 +468,23 @@
       // "exam" = gercek sinav (3 rota); "exam9" = uzun prova, her turden 3 rota
       const kinds = m === "exam" ? ["short", "closed", "long"] : m === "exam9" ? ["short", "closed", "long", "short", "closed", "long", "short", "closed", "long"] : [m];
       qs = [];
-      kinds.forEach(k => {  // ayni prova icinde ayni yer cifti tekrar etmesin
+      if (m === "challenge") {
+        // Ayin rotalari: her yuva icin birkac aday, en cok yol degistiren (en cok donuslu) secilir
+        rand = seeded("challenge|" + monthKey());
+        try {
+          ["long", "closedlong", "long", "closedlong", "long"].forEach(k => {
+            let pick = null;
+            for (let t = 0; t < 12; t++) {
+              const q = makeQuestion(k);
+              if (!q || qs.some(x => x.A.n === q.A.n || x.B.n === q.B.n)) continue;
+              if (!pick || roadChanges(q) > roadChanges(pick)) pick = q;
+              if (t >= 3 && pick) break;
+            }
+            if (pick) qs.push(pick);
+          });
+        } finally { rand = Math.random; }
+      }
+      else kinds.forEach(k => {  // ayni prova icinde ayni yer cifti tekrar etmesin
         for (let t = 0; t < 8; t++) {
           const q = makeQuestion(k);
           if (q && (t === 7 || !qs.some(x => x.A.n === q.A.n && x.B.n === q.B.n))) { qs.push(q); break; }
@@ -570,7 +602,7 @@
     results.push({ q, res });
     draw(res);
     const f = $("route-feedback"); f.innerHTML = "";
-    const h = document.createElement("b"); h.textContent = `Puan: ${res.pts} / ${MAX}`; f.append(h);
+    const h = document.createElement("b"); h.textContent = `${T("Puan", "Score")}: ${res.pts} / ${MAX}`; f.append(h);
     res.items.forEach(([k, t]) => { const p = document.createElement("p"); p.className = k === "ok" ? "ok" : "tip"; p.textContent = (k === "ok" ? "✓ " : k === "warn" ? "⚠ " : "✗ ") + t; f.append(p); });
     const lg = document.createElement("p"); lg.className = "ref";
     lg.textContent = T("Haritada: mavi = sizin rotanız, kırmızı = kurala aykırı kısım, yeşil = en direkt yasal rota. Puan kesintileri tahminidir (TfL dağılımı yayınlamıyor); kriterler TfL rehberinden. Değerlendirici ana yolları kullanan makul bir alternatifi de kabul edebilir.", "On the map: blue = your route, red = the part that breaks a rule, green = the most direct legal route. Point deductions are estimates (TfL does not publish the breakdown); the criteria come from TfL guidance. An assessor may also accept a sensible alternative that uses main roads.");
@@ -587,7 +619,9 @@
     if (!isExam()) { startRoutes(mode); return; }
     const tot = results.reduce((a, r) => a + r.res.pts, 0);
     $("route-score").textContent = `${T("Rota puanı", "Route score")}: ${tot} / ${MAX * results.length}`;
-    $("route-verdict").textContent = (results.length > 3 ? T(`Ortalama: rota başına ${(tot / results.length).toFixed(1)} / ${MAX}. `, `Average: ${(tot / results.length).toFixed(1)} / ${MAX} per route. `) : "") + T(`Gerçek sınavda 3 rota var ve 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`, `The real test has 3 routes worth 66 of the 100 points. You need 60 in total to pass; the more points you get on the routes, the easier the multiple-choice part becomes.`);
+    $("route-again").textContent = mode === "challenge" ? T("🔁 Aynı rotaları tekrar dene", "🔁 Try the same routes again") : T("🔁 Yeni rotalarla tekrar", "🔁 Again with new routes");
+    if (mode === "challenge") $("route-verdict").textContent = T("Bu ayın Route Challenge sonucu. Ekran görüntüsünü alıp Facebook grubunda paylaş! Yeni 5 rota ayın 1'inde.", "This month's Route Challenge result. Take a screenshot and share it in the Facebook group! 5 new routes on the 1st of every month.");
+    else $("route-verdict").textContent = (results.length > 3 ? T(`Ortalama: rota başına ${(tot / results.length).toFixed(1)} / ${MAX}. `, `Average: ${(tot / results.length).toFixed(1)} / ${MAX} per route. `) : "") + T(`Gerçek sınavda 3 rota var ve 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`, `The real test has 3 routes worth 66 of the 100 points. You need 60 in total to pass; the more points you get on the routes, the easier the multiple-choice part becomes.`);
     const box = $("route-sum"); box.innerHTML = "";
     results.forEach(({ q, res }) => {
       const d = document.createElement("div"); d.className = "ans";
@@ -606,6 +640,15 @@
   $("route-exam").onclick = () => startRoutes("exam");
   $("route-exam9").onclick = () => startRoutes("exam9");
   $("route-again").onclick = () => startRoutes(lastExam);
+  $("route-challenge").onclick = () => { if (chUnlocked()) startRoutes("challenge"); else { $("ch-lock").hidden = !$("ch-lock").hidden; if (!$("ch-lock").hidden) $("ch-code").focus(); } };
+  $("ch-go").onclick = async () => {
+    const ok = await codeOk($("ch-code").value).catch(() => false);
+    if (!ok) { $("ch-msg").textContent = T("Kod doğru değil. Bu ayın kodu grubun sabitli gönderisinde.", "That code is not right. This month's code is in the group's pinned post."); return; }
+    try { localStorage.setItem("route-challenge", monthKey()); } catch (e) {}
+    $("ch-lock").hidden = true; $("ch-code").value = ""; $("ch-msg").textContent = "";
+    startRoutes("challenge");
+  };
+  $("ch-code").onkeydown = e => { if (e.key === "Enter") $("ch-go").click(); };
   $("route-undo").onclick = undo;
   $("route-signs").onclick = () => {
     showSigns = !showSigns; vis();
@@ -616,5 +659,5 @@
   $("route-submit").onclick = submit;
   $("route-next").onclick = next;
   $("route-trbtn").onclick = () => { const t = $("route-tr"); t.hidden = !t.hidden; };
-  window.__route = { start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, hop, turnOf, uTurnsIn, uAt, debugPlaces: () => places(), map: () => map };  // test icin
+  window.__route = { monthKey, codeOk, start: startRoutes, tap, submit, makeQuestion, score, lastNode, state: () => ({ qs, qi, taps, steps, results, done }), graph: () => G, bestRoute, hop, turnOf, uTurnsIn, uAt, debugPlaces: () => places(), map: () => map };  // test icin
 })();

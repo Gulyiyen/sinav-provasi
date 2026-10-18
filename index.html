@@ -357,6 +357,17 @@
       <button class="small" id="route-closed" data-en="Road closed">Yol kapalı</button>
       <button class="small" id="route-long" data-en="Long route">Uzun rota</button>
     </div>
+    <button class="big" id="route-challenge" style="background:var(--amber);color:#1a1300;margin-top:18px" data-en="🏆 Monthly Route Challenge – 5 hard routes 🔒">🏆 Aylık Route Challenge – 5 zor rota 🔒</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="New routes every month, the same for everyone. Unlock with the code from our Facebook group.">Her ay yeni rotalar, herkes için aynı. Facebook grubumuzdaki kodla açılır.</p>
+    <div class="card" id="ch-lock" hidden>
+      <p style="margin-top:0" data-en="This month's code is in the pinned post of our free Facebook group:">Bu ayın kodu ücretsiz Facebook grubumuzun sabitli gönderisinde:</p>
+      <p><a href="https://www.facebook.com/groups/londonpcotesthelp" target="_blank" rel="noopener" style="color:#7fb4ff">👥 facebook.com/groups/londonpcotesthelp</a></p>
+      <div class="row" style="gap:8px">
+        <input id="ch-code" autocomplete="off" autocapitalize="characters" placeholder="CODE" style="flex:1;min-width:0;font:inherit;font-size:18px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)">
+        <button class="small" id="ch-go" style="background:var(--green);border-color:var(--green);font-weight:700" data-en="Unlock">Aç</button>
+      </div>
+      <p class="muted" id="ch-msg" style="font-size:14px;min-height:18px"></p>
+    </div>
   </section>
 
   <section class="screen" id="s-route">
