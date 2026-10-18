@@ -9,8 +9,8 @@
   const DIRS = ["North", "North-east", "East", "South-east", "South", "South-west", "West", "North-west"];
   const DIRS_TR = ["kuzey", "kuzeydoğu", "doğu", "güneydoğu", "güney", "güneybatı", "batı", "kuzeybatı"];
   const KIND = {
-    compass: "Pusula ve yönler", grid: "Kare (grid) bulma", street: "Sokak bulma",
-    road: "Yol numarası", sign: "İşaretler", tf: "Rota planlama – doğru mu, yanlış mı?"
+    compass: T("Pusula ve yönler", "Compass and directions"), grid: T("Kare (grid) bulma", "Finding the grid square"), street: T("Sokak bulma", "Finding a street"),
+    road: T("Yol numarası", "Road numbers"), sign: T("İşaretler", "Signs"), tf: T("Rota planlama – doğru mu, yanlış mı?", "Route planning – true or false?")
   };
   const MIX = { practice: { compass: 2, grid: 2, street: 2, road: 1, sign: 2, tf: 1 },
                 long: { compass: 10, grid: 10, street: 10, road: 8, sign: 7, tf: 5 } };  // 50 soru
@@ -44,7 +44,7 @@
       if (Math.abs(((b - k * 45) + 540) % 360 - 180) > 12) continue;  // iki yonun arasina dusenler belirsiz, atla
       const drive = Math.random() < 0.5;
       const v = Math.round(Math.cos(k * 45 * Math.PI / 180) * 10), h = Math.round(Math.sin(k * 45 * Math.PI / 180) * 10);
-      const where = [v > 0 ? "yukarıda" : v < 0 ? "aşağıda" : "", h > 0 ? "sağda" : h < 0 ? "solda" : ""].filter(Boolean).join(" ve ");
+      const where = [v > 0 ? T("yukarıda", "above") : v < 0 ? T("aşağıda", "below") : "", h > 0 ? T("sağda", "to the right") : h < 0 ? T("solda", "to the left") : ""].filter(Boolean).join(T(" ve ", " and "));
       return {
         kind: "compass",
         q: drive ? `You drive from ${A.n} (green marker) to ${B.n} (red marker). In which general direction are you travelling?`
@@ -52,7 +52,7 @@
         tr: drive ? `${A.n} (yeşil) noktasından ${B.n} (kırmızı) noktasına gidiyorsunuz. Genel olarak hangi yöne gidiyorsunuz?`
                   : `${A.n} (yeşil) noktasından bakınca ${B.n} (kırmızı) hangi yönde?`,
         o: opts(DIRS[k], DIRS),
-        e: `Haritada kuzey yukarıdadır. Kırmızı işaret yeşile göre ${where} → ${DIRS_TR[k]} (${DIRS[k]}). Yaklaşık ${(d / 1000).toFixed(1)} km.`,
+        e: T(`Haritada kuzey yukarıdadır. Kırmızı işaret yeşile göre ${where} → ${DIRS_TR[k]} (${DIRS[k]}). Yaklaşık ${(d / 1000).toFixed(1)} km.`, `North is at the top of the map. Seen from the green marker, the red one is ${where} → ${DIRS[k]}. About ${(d / 1000).toFixed(1)} km.`),
         map: { type: "pair", a: A, b: B }
       };
     }
@@ -73,7 +73,7 @@
       q: `Using the grid on the map, in which square is ${P.n}?`,
       tr: `Haritadaki kareleri kullanarak: ${P.n} hangi karede?`,
       o: opts(right, near),
-      e: `Önce harfe (üstteki sütun: A–D), sonra rakama (soldaki satır: 1–4) bakın. ${P.n} → ${COLS[c]} sütunu, ${r + 1}. satır = ${right}. Haritada istasyonlar adıyla yazılır; adı arayın.`,
+      e: T(`Önce harfe (üstteki sütun: A–D), sonra rakama (soldaki satır: 1–4) bakın. ${P.n} → ${COLS[c]} sütunu, ${r + 1}. satır = ${right}. Haritada istasyonlar adıyla yazılır; adı arayın.`, `First find the letter (column along the top: A–D), then the number (row down the side: 1–4). ${P.n} → column ${COLS[c]}, row ${r + 1} = ${right}. Stations are labelled by name on the map; look for the name.`),
       map: { type: "grid", p: P, c, r, fx: 0.2 + Math.random() * 0.3, fy: 0.25 + Math.random() * 0.45 }
     };
   }
@@ -85,7 +85,7 @@
       q: "What is the name of the road at the red marker?",
       tr: "Kırmızı işaretin olduğu yolun adı ne?",
       o: opts(S.n, S.nb),
-      e: `Haritada yol adları yolun üzerine yazılır. Gerekirse haritayı iki parmakla büyütün. Doğru cevap: ${S.n}.`,
+      e: T(`Haritada yol adları yolun üzerine yazılır. Gerekirse haritayı iki parmakla büyütün. Doğru cevap: ${S.n}.`, `Road names are written along the road on the map. Zoom in with two fingers if needed. Correct answer: ${S.n}.`),
       map: { type: "point", s: S }
     };
   }
@@ -101,7 +101,7 @@
       q: `The road shown in purple is ${S.n}. What is its road number?`,
       tr: `Mor gösterilen yol ${S.n}. Yol numarası nedir?`,
       o: opts(S.ref, pool),
-      e: `Yol numarası haritada yolun üzerinde küçük kutu içinde yazar. ${S.n} = ${S.ref}. "A" ile başlayanlar ana yol, "B" ile başlayanlar daha küçük yollardır.`,
+      e: T(`Yol numarası haritada yolun üzerinde küçük kutu içinde yazar. ${S.n} = ${S.ref}. "A" ile başlayanlar ana yol, "B" ile başlayanlar daha küçük yollardır.`, `The road number is written in a small box on the road on the map. ${S.n} = ${S.ref}. Roads starting with "A" are main roads; "B" roads are smaller.`),
       map: { type: "line", s: S }
     };
   }
@@ -118,12 +118,12 @@
   function genSigns(n) {
     return seenPick("topo-seen-sign", SIGNS, n, x => x.a).map(s => ({
       kind: "sign", q: "What does this sign mean?", tr: "Bu işaret ne anlama gelir?",
-      o: opts(s.a, SIGNS.map(x => x.a)), e: s.e, svg: s.svg, trOpt: s.tr
+      o: opts(s.a, SIGNS.map(x => x.a)), e: T(s.e, s.ee || s.e), svg: s.svg, trOpt: T(s.tr, "")
     }));
   }
   function genTF(n) {
     return seenPick("topo-seen-tf", TF, n, x => x.q).map(t => ({
-      kind: "tf", q: t.q, tr: t.tr, o: t.a ? ["True", "False"] : ["False", "True"], e: t.e, fixed: true
+      kind: "tf", q: t.q, tr: t.tr, o: t.a ? ["True", "False"] : ["False", "True"], e: T(t.e, t.ee || t.e), fixed: true
     }));
   }
 
@@ -226,7 +226,7 @@
 
   function render() {
     const x = qs[idx];
-    $("topo-progress").textContent = `Soru ${idx + 1} / ${qs.length}`;
+    $("topo-progress").textContent = `${T("Soru", "Question")} ${idx + 1} / ${qs.length}`;
     $("topo-type").textContent = KIND[x.kind];
     $("topo-qtext").textContent = x.q;
     $("topo-tr").textContent = x.tr; $("topo-tr").hidden = true;
@@ -234,7 +234,7 @@
     const sg = $("topo-sign"); sg.hidden = !x.svg; sg.innerHTML = x.svg || "";
     $("topo-feedback").hidden = true;
     $("topo-next").disabled = true;
-    $("topo-next").textContent = idx + 1 < qs.length ? "Sonraki →" : "Sonucu gör";
+    $("topo-next").textContent = idx + 1 < qs.length ? T("Sonraki →", "Next →") : T("Sonucu gör", "See result");
     const box = $("topo-opts"); box.innerHTML = "";
     x.opts.forEach(o => {
       const b = document.createElement("button");
@@ -263,7 +263,7 @@
     const f = $("topo-feedback");
     f.className = "card feedback " + (right ? "ok" : "no");
     f.innerHTML = "";
-    const h = document.createElement("b"); h.textContent = right ? "✓ Doğru" : "✗ Yanlış – doğru cevap: " + x.o[0];
+    const h = document.createElement("b"); h.textContent = right ? T("✓ Doğru", "✓ Correct") : T("✗ Yanlış – doğru cevap: ", "✗ Wrong – correct answer: ") + x.o[0];
     const e = document.createElement("p"); e.textContent = (x.trOpt ? `(${x.trOpt}) ` : "") + x.e;
     f.append(h, e); f.hidden = false;
     $("topo-next").disabled = false;
@@ -277,9 +277,9 @@
   function finish() {
     const correct = qs.filter((x, i) => picks[i] === x.o[0]).length;
     const pct = Math.round(correct / qs.length * 100);
-    $("topo-score").textContent = `${correct} / ${qs.length} doğru (%${pct})`;
+    $("topo-score").textContent = T(`${correct} / ${qs.length} doğru (%${pct})`, `${correct} / ${qs.length} correct (${pct}%)`);
     const v = $("topo-verdict");
-    v.textContent = pct >= 60 ? "Güzel gidiyorsunuz 👍" : "Yanlışlarınızı okuyun, sonra tekrar deneyin.";
+    v.textContent = pct >= 60 ? T("Güzel gidiyorsunuz 👍", "You're doing well 👍") : T("Yanlışlarınızı okuyun, sonra tekrar deneyin.", "Read your mistakes, then try again.");
     // Konu bazinda: hangi tur soruda zorlaniyor
     const by = {};
     qs.forEach((x, i) => { const b = by[x.kind] = by[x.kind] || [0, 0]; b[1]++; if (picks[i] === x.o[0]) b[0]++; });
@@ -291,8 +291,8 @@
       const d = document.createElement("div"); d.className = "ans";
       const q = document.createElement("div"); q.className = "q"; q.textContent = x.q;
       if (x.svg) { const s = document.createElement("div"); s.className = "signsm"; s.innerHTML = x.svg; d.append(s); }
-      const a = document.createElement("div"); a.className = "tip"; a.textContent = "Sizin cevabınız: " + (p === undefined ? "(boş)" : p);
-      const c = document.createElement("div"); c.className = "ok"; c.textContent = "Doğru cevap: " + x.o[0];
+      const a = document.createElement("div"); a.className = "tip"; a.textContent = T("Sizin cevabınız: ", "Your answer: ") + (p === undefined ? T("(boş)", "(blank)") : p);
+      const c = document.createElement("div"); c.className = "ok"; c.textContent = T("Doğru cevap: ", "Correct answer: ") + x.o[0];
       const e = document.createElement("div"); e.className = "sample"; e.textContent = (x.trOpt ? `(${x.trOpt}) ` : "") + x.e;
       d.append(q, a, c, e); box.append(d);
     });

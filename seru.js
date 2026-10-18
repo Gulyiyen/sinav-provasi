@@ -3,11 +3,11 @@
 (() => {
   const BANK = window.SERU || [];
   const SECTIONS = {
-    1: "Lisans", 2: "Araç lisansı", 3: "Yolculuklar", 4: "Güvenlik", 5: "Sürücü davranışı",
-    6: "Londra'da sürüş ve park", 7: "Güvenli sürüş", 8: "Eşitlik ve engellilik",
-    9: "Çocukları ve risk altındakileri koruma", 10: "Paylaşımlı yolculuk"
+    1: T("Lisans", "Licensing"), 2: T("Araç lisansı", "Vehicle licensing"), 3: T("Yolculuklar", "Journeys"), 4: T("Güvenlik", "Safety"), 5: T("Sürücü davranışı", "Driver behaviour"),
+    6: T("Londra'da sürüş ve park", "Driving and parking in London"), 7: T("Güvenli sürüş", "Safe driving"), 8: T("Eşitlik ve engellilik", "Equality and disability"),
+    9: T("Çocukları ve risk altındakileri koruma", "Safeguarding children and adults at risk"), 10: T("Paylaşımlı yolculuk", "Shared journeys")
   };
-  const TYPE_LABEL = { mcq: "Doğru cevabı seçin", fill: "Cümleyi tamamlayın", read: "Okuyun ve cevaplayın" };
+  const TYPE_LABEL = T({ mcq: "Doğru cevabı seçin", fill: "Cümleyi tamamlayın", read: "Okuyun ve cevaplayın" }, { mcq: "Choose the correct answer", fill: "Complete the sentence", read: "Read and answer" });
   const EXAM = { mcq: 18, fill: 17, read: 2, minutes: 45 };
   const PASS = 0.6;
   const $ = id => document.getElementById(id);
@@ -60,7 +60,7 @@
 
   function render() {
     const x = qs[idx];
-    $("seru-progress").textContent = `Soru ${idx + 1} / ${qs.length}`;
+    $("seru-progress").textContent = `${T("Soru", "Question")} ${idx + 1} / ${qs.length}`;
     $("seru-type").textContent = TYPE_LABEL[typeOf(x)];
     const p = $("seru-passage");
     p.hidden = !x.p; p.textContent = x.p || "";
@@ -69,7 +69,7 @@
     $("seru-trbtn").textContent = "🇹🇷 Türkçesini göster";
     $("seru-feedback").hidden = true;
     $("seru-next").disabled = true;
-    $("seru-next").textContent = idx + 1 < qs.length ? "Sonraki →" : "Sonucu gör";
+    $("seru-next").textContent = idx + 1 < qs.length ? T("Sonraki →", "Next →") : T("Sonucu gör", "See result");
     const box = $("seru-opts"); box.innerHTML = "";
     x.opts.forEach(o => {
       const b = document.createElement("button");
@@ -100,9 +100,9 @@
     const f = $("seru-feedback");
     f.className = "card feedback " + (right ? "ok" : "no");
     f.innerHTML = "";
-    const h = document.createElement("b"); h.textContent = right ? "✓ Doğru" : "✗ Yanlış – doğru cevap: " + x.o[0];
-    const e = document.createElement("p"); e.textContent = x.e;
-    const r = document.createElement("p"); r.className = "ref"; r.textContent = `📖 El kitabı – Bölüm ${x.s}: ${SECTIONS[x.s]}`;
+    const h = document.createElement("b"); h.textContent = right ? T("✓ Doğru", "✓ Correct") : T("✗ Yanlış – doğru cevap: ", "✗ Wrong – correct answer: ") + x.o[0];
+    const e = document.createElement("p"); e.textContent = T(x.e, x.ee || x.e);
+    const r = document.createElement("p"); r.className = "ref"; r.textContent = `📖 ${T("El kitabı – Bölüm", "Handbook – Section")} ${x.s}: ${SECTIONS[x.s]}`;
     f.append(h, e, r); f.hidden = false;
     $("seru-next").disabled = false;
   }
@@ -118,26 +118,26 @@
     const correct = qs.filter((x, i) => picks[i] === x.o[0]).length;
     const pct = Math.round(correct / qs.length * 100);
     const passed = correct / qs.length >= PASS;
-    $("seru-score").textContent = `${correct} / ${qs.length} doğru (%${pct})`;
+    $("seru-score").textContent = T(`${correct} / ${qs.length} doğru (%${pct})`, `${correct} / ${qs.length} correct (${pct}%)`);
     const v = $("seru-verdict");
     if (mode === "exam") {
-      v.textContent = passed ? "✅ GEÇTİNİZ – gerçek sınavda geçme notu %60" : "❌ Bu sefer olmadı – geçmek için %60 gerekiyor. Yanlışlarınıza bakıp tekrar deneyin.";
+      v.textContent = passed ? T("✅ GEÇTİNİZ – gerçek sınavda geçme notu %60", "✅ PASS – the pass mark in the real test is 60%") : T("❌ Bu sefer olmadı – geçmek için %60 gerekiyor. Yanlışlarınıza bakıp tekrar deneyin.", "❌ Not this time – you need 60% to pass. Look at your mistakes and try again.");
       v.className = passed ? "verdict pass" : "verdict fail";
     } else {
-      v.textContent = passed ? "Güzel gidiyorsunuz 👍" : "Yanlışlarınızı okuyun, sonra tekrar deneyin.";
+      v.textContent = passed ? T("Güzel gidiyorsunuz 👍", "You're doing well 👍") : T("Yanlışlarınızı okuyun, sonra tekrar deneyin.", "Read your mistakes, then try again.");
       v.className = "verdict";
     }
-    $("seru-meta").textContent = answered < qs.length ? `${qs.length - answered} soru boş kaldı (boş = yanlış).` : "";
+    $("seru-meta").textContent = answered < qs.length ? T(`${qs.length - answered} soru boş kaldı (boş = yanlış).`, `${qs.length - answered} questions left blank (blank = wrong).`) : "";
     const box = $("seru-wrong"); box.innerHTML = "";
     const wrong = qs.map((x, i) => ({ x, p: picks[i] })).filter(w => w.p !== w.x.o[0]);
     $("seru-wrong-title").hidden = !wrong.length;
     wrong.forEach(({ x, p }) => {
       const d = document.createElement("div"); d.className = "ans";
       const q = document.createElement("div"); q.className = "q"; q.textContent = (x.p ? x.p + " " : "") + x.q;
-      const a = document.createElement("div"); a.className = "tip"; a.textContent = "Sizin cevabınız: " + (p === undefined ? "(boş)" : p);
-      const c = document.createElement("div"); c.className = "ok"; c.textContent = "Doğru cevap: " + x.o[0];
-      const e = document.createElement("div"); e.className = "sample"; e.textContent = x.e;
-      const r = document.createElement("div"); r.className = "ref"; r.textContent = `📖 Bölüm ${x.s}: ${SECTIONS[x.s]}`;
+      const a = document.createElement("div"); a.className = "tip"; a.textContent = T("Sizin cevabınız: ", "Your answer: ") + (p === undefined ? T("(boş)", "(blank)") : p);
+      const c = document.createElement("div"); c.className = "ok"; c.textContent = T("Doğru cevap: ", "Correct answer: ") + x.o[0];
+      const e = document.createElement("div"); e.className = "sample"; e.textContent = T(x.e, x.ee || x.e);
+      const r = document.createElement("div"); r.className = "ref"; r.textContent = `📖 ${T("Bölüm", "Section")} ${x.s}: ${SECTIONS[x.s]}`;
       d.append(q, a, c, e, r); box.append(d);
     });
     show("s-seru-result", "replace");

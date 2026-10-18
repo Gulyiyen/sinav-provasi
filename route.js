@@ -301,20 +301,20 @@
     const out = { items: [], pts: MAX, wrongWay: [], bannedAt: [], closedUsed: [] };
     const near = (n, P, r) => meters(G.nodes[n], P.p) <= r + 25;  // dokunus payi
     if (!taps.length || !steps.length) {
-      out.pts = 0; out.items.push(["no", "Rota çizilmedi.", -MAX]); return out;
+      out.pts = 0; out.items.push(["no", T("Rota çizilmedi.", "No route was drawn."), -MAX]); return out;
     }
     const first = taps[0], last = taps[taps.length - 1];
     const atA = n => near(n, q.A, q.A.rs), atB = n => near(n, q.B, q.B.re);
     const reversed = atB(first) && atA(last);
     const ded = (ok, good, bad, d) => { out.items.push(ok ? ["ok", good, 0] : ["no", bad, -d]); if (!ok) out.pts -= d; };
-    if (reversed) ded(false, "", "Rota TERS çizilmiş (kırmızıdan yeşile). TfL bunu puan kaybettiren hata sayar.", 11);
+    if (reversed) ded(false, "", T("Rota TERS çizilmiş (kırmızıdan yeşile). TfL bunu puan kaybettiren hata sayar.", "The route was drawn BACKWARDS (red to green). TfL counts this as an error that loses points."), 11);
     else {
-      ded(atA(first), "Başlangıç doğru (yeşil işaret).", "Rota yeşil işaretten başlamıyor.", 4);
-      ded(atB(last), "Bitiş doğru (kırmızı işaret).", "Rota kırmızı işarette bitmiyor.", 4);
+      ded(atA(first), T("Başlangıç doğru (yeşil işaret).", "Correct start (green marker)."), T("Rota yeşil işaretten başlamıyor.", "The route does not start at the green marker."), 4);
+      ded(atB(last), T("Bitiş doğru (kırmızı işaret).", "Correct finish (red marker)."), T("Rota kırmızı işarette bitmiyor.", "The route does not finish at the red marker."), 4);
       // Bolgenin icinde ama hedefin kapisina gelmeden durmak: en direkt rotanin bittigi yere gore olculur
       // (bazi yerler yoldan uzak; ornegin Waterloo istasyonunun ortasina 120 m'den yakin yol yok)
       const short = Math.round(meters(G.nodes[last], q.B.p) - meters(G.nodes[lastNode(q.best.steps)], q.B.p));
-      if (atB(last) && short > 50) ded(false, "", `Rota hedefe varmadan bitiyor: kırmızı işaretin önüne gelmeden ${short} m erken durdunuz.`, 2);
+      if (atB(last) && short > 50) ded(false, "", T(`Rota hedefe varmadan bitiyor: kırmızı işaretin önüne gelmeden ${short} m erken durdunuz.`, `The route stops short of the destination: you stopped ${short} m before reaching the red marker.`), 2);
     }
     out.bannedTurns = [];  // {n kavsak, kind "no_right_turn" vb., brg yaklasma yonu, from/to yol adi}
     steps.forEach((s, i) => {
@@ -326,19 +326,19 @@
       if (q.closed && q.closed.has(s.e)) out.closedUsed.push(s.e);
     });
     const ww = [...new Set(out.wrongWay.map(e => G.edges[e].name || "isimsiz yol"))];
-    ded(!ww.length, "Tek yönlü yollara uyuldu.", `Tek yönlü yolda TERS yöne gidildi: ${ww.join(", ")}.`, Math.min(12, 4 * ww.length));
-    const TURN_TR = { no_left_turn: "sola", no_right_turn: "sağa", no_u_turn: "U", no_straight_on: "düz" };
-    const turnTxt = t => `${t.from || "isimsiz yol"} → ${t.to || "isimsiz yol"} (${TURN_TR[t.kind]} dönüş yasak)`;
+    ded(!ww.length, T("Tek yönlü yollara uyuldu.", "One-way streets were followed."), T(`Tek yönlü yolda TERS yöne gidildi: ${ww.join(", ")}.`, `Wrong way down a one-way street: ${ww.join(", ")}.`), Math.min(12, 4 * ww.length));
+    const TURN_TR = T({ no_left_turn: "sola", no_right_turn: "sağa", no_u_turn: "U", no_straight_on: "düz" }, { no_left_turn: "no left turn", no_right_turn: "no right turn", no_u_turn: "no U-turn", no_straight_on: "no straight on" });
+    const turnTxt = t => `${t.from || T("isimsiz yol", "unnamed road")} → ${t.to || T("isimsiz yol", "unnamed road")} (${T(TURN_TR[t.kind] + " dönüş yasak", TURN_TR[t.kind])})`;
     out.uTurns = uTurnsIn(steps).map(i => ({ n: steps[i].from, name: G.edges[steps[i - 1].e].name || "isimsiz yol" }));
-    ded(!out.uTurns.length, "U dönüşü yok.", `U dönüşü yapıldı: ${[...new Set(out.uTurns.map(u => u.name))].join(", ")}. Sınavda U dönüşü ile rota çizilmez.`, Math.min(8, 4 * out.uTurns.length));
+    ded(!out.uTurns.length, T("U dönüşü yok.", "No U-turns."), T(`U dönüşü yapıldı: ${[...new Set(out.uTurns.map(u => u.name))].join(", ")}. Sınavda U dönüşü ile rota çizilmez.`, `U-turn made: ${[...new Set(out.uTurns.map(u => u.name))].join(", ")}. Routes in the test must not use U-turns.`), Math.min(8, 4 * out.uTurns.length));
     // Donus yasagi PUAN KIRMAZ, uyarir (operator, 15 Eki): haritada gorunmuyor, veride hata olabilir ve kurallar sik
     // degisiyor; yanlis veriyle haksiz puan kirmak, hic uyarmamaktan kotu. Model rota yine de yasaklardan kacinir.
-    if (out.bannedAt.length) out.items.push(["warn", `Dikkat – bu kavşakta dönüş yasağı olabilir: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi. Puan kırılmadı; gerçek yolda tabelaya bakın.`, 0]);
-    if (q.closed) ded(!out.closedUsed.length, `Kapalı yol (${q.closedName}) kullanılmadı.`, `KAPALI yol kullanıldı: ${q.closedName}.`, 8);
+    if (out.bannedAt.length) out.items.push(["warn", T(`Dikkat – bu kavşakta dönüş yasağı olabilir: ${out.bannedTurns.map(turnTxt).join("; ")}. Haritada işaretle gösterildi. Puan kırılmadı; gerçek yolda tabelaya bakın.`, `Careful – there may be a banned turn at this junction: ${out.bannedTurns.map(turnTxt).join("; ")}. It is marked on the map. No points were taken off; on the real road, check the signs.`), 0]);
+    if (q.closed) ded(!out.closedUsed.length, T(`Kapalı yol (${q.closedName}) kullanılmadı.`, `The closed road (${q.closedName}) was not used.`), T(`KAPALI yol kullanıldı: ${q.closedName}.`, `The CLOSED road was used: ${q.closedName}.`), 8);
     const um = Math.round(stepLen(steps)), bm = Math.round(stepLen(q.best.steps));
     if (reversed || !atA(first) || !atB(last)) {
       // Yeşilden kırmızıya tamamlanmamış rota: kısalığı "direkt" sayılamaz
-      ded(false, "", `Rota yeşilden kırmızıya tamamlanmadığı için en direkt rota olarak değerlendirilemedi (en direkt yasal rota ${bm} m).`, 10);
+      ded(false, "", T(`Rota yeşilden kırmızıya tamamlanmadığı için en direkt rota olarak değerlendirilemedi (en direkt yasal rota ${bm} m).`, `The route is not complete from green to red, so it could not be scored as the most direct route (most direct legal route: ${bm} m).`), 10);
     } else {
       // Puanlamada isarete uzaklik GERCEK metreyle sayilir (GAP_W yalnizca en iyi rotayi kapiya goturmek icin);
       // erken durmanin cezasi yukaridaki -2
@@ -347,7 +347,7 @@
       const ratio = (stepCost(steps) + gapM(first, q.A) + gapM(last, q.B)) / (q.best.cost + gapM(q.best.steps[0].from, q.A) + gapM(lastNode(q.best.steps), q.B));
       // %12'ye kadar uzun rota tam puan: ana yolu kullanan makul alternatif cezalanmasin
       const d = ratio <= 1.12 ? 0 : Math.min(10, Math.ceil((ratio - 1.12) / 0.04));
-      ded(d === 0, `Rota direkt: ${um} m (en kısa yasal rota ${bm} m).`, `Rota en direkt değil: ${um} m, en direkt yasal rota ${bm} m (%${Math.round((ratio - 1) * 100)} daha uzun).`, d);
+      ded(d === 0, T(`Rota direkt: ${um} m (en kısa yasal rota ${bm} m).`, `Direct route: ${um} m (shortest legal route ${bm} m).`), T(`Rota en direkt değil: ${um} m, en direkt yasal rota ${bm} m (%${Math.round((ratio - 1) * 100)} daha uzun).`, `Not the most direct route: ${um} m, most direct legal route ${bm} m (${Math.round((ratio - 1) * 100)}% longer).`), d);
     }
     out.pts = Math.max(0, out.pts);
     return out;
@@ -355,7 +355,7 @@
 
   // --- Ekran ---
   let qs = [], qi = 0, taps = [], steps = [], hops = [], results = [], mode = "single", done = false;
-  const KIND_TR = { short: "Kısa rota", closed: "Kısa rota – yol kapalı", long: "Uzun rota" };
+  const KIND_TR = T({ short: "Kısa rota", closed: "Kısa rota – yol kapalı", long: "Uzun rota" }, { short: "Short route", closed: "Short route – road closed", long: "Long route" });
 
   function ensureMap() {
     if (map) return;
@@ -367,7 +367,7 @@
     if (canRotate) {
       const RotCtl = L.Control.extend({ options: { position: "topright" }, onAdd() {
         const box = L.DomUtil.create("div", "leaflet-bar rotbar");
-        [["⟲", "Sola çevir", -30], ["⬆N", "Kuzey yukarı", 0], ["⟳", "Sağa çevir", 30]].forEach(([t, title, d]) => {
+        [["⟲", T("Sola çevir", "Rotate left"), -30], ["⬆N", T("Kuzey yukarı", "North up"), 0], ["⟳", T("Sağa çevir", "Rotate right"), 30]].forEach(([t, title, d]) => {
           const a = L.DomUtil.create("a", "", box); a.href = "#"; a.textContent = t; a.title = title; a.setAttribute("role", "button");
           L.DomEvent.on(a, "click", e => { L.DomEvent.stop(e); map.setBearing(d ? map.getBearing() + d : 0); });
         });
@@ -443,8 +443,8 @@
   let lastExam = "exam";
   function startRoutes(m) {
     mode = m; if (m.startsWith("exam")) lastExam = m;
-    if (!window.L) { alert("Harita yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin."); return; }
-    $("route-status").textContent = "Harita yükleniyor…";
+    if (!window.L) { alert(T("Harita yüklenemedi. İnternet bağlantınızı kontrol edip sayfayı yenileyin.", "The map could not load. Check your internet connection and refresh the page.")); return; }
+    $("route-status").textContent = T("Harita yükleniyor…", "Loading map…");
     if (document.querySelector(".screen.on").id !== "s-route") show("s-route");  // "Yeni rota": ayni ekran, gecmise yazma
     loadGraph().then(() => {
       // "exam" = gercek sinav (3 rota); "exam9" = uzun prova, her turden 3 rota
@@ -458,14 +458,14 @@
       });
       qi = 0; results = [];
       ensureMap(); render();
-    }).catch(() => { $("route-status").textContent = "Harita verisi yüklenemedi. İnternet bağlantınızı kontrol edin."; });
+    }).catch(() => { $("route-status").textContent = T("Harita verisi yüklenemedi. İnternet bağlantınızı kontrol edin.", "Map data could not load. Check your internet connection."); });
   }
   const show = (id, how) => window.showScreen(id, how);  // ortak gecis: telefonun geri tusu calissin
 
   function render() {
     const q = qs[qi];
     taps = []; steps = []; hops = []; done = false;
-    $("route-progress").textContent = isExam() ? `Rota ${qi + 1} / ${qs.length} · ${KIND_TR[q.kind]}` : KIND_TR[q.kind];
+    $("route-progress").textContent = isExam() ? `${T("Rota", "Route")} ${qi + 1} / ${qs.length} · ${KIND_TR[q.kind]}` : KIND_TR[q.kind];
     $("route-q").textContent = q.q;
     $("route-tr").textContent = q.tr; $("route-tr").hidden = true;
     $("route-feedback").hidden = true;
@@ -475,7 +475,7 @@
     map.fitBounds([q.A.p, q.B.p], { padding: [40, 40], animate: false });
     draw();
     $("route-status").classList.remove("refused");
-    $("route-status").textContent = "Yeşil işarete dokunarak başlayın, sonra yol boyunca kavşak kavşak dokunun.";
+    $("route-status").textContent = T("Yeşil işarete dokunarak başlayın, sonra yol boyunca kavşak kavşak dokunun.", "Start by tapping the green marker, then tap junction by junction along the road.");
   }
 
   function draw(res) {
@@ -507,7 +507,7 @@
       L.marker(P.p, { icon: placeIcon(P), interactive: false }).addTo(layers);
       L.marker(P.p, { icon: pin(c, t), interactive: false }).bindTooltip(P.n, { permanent: true, direction: "top", offset: [0, -40], className: "plab" }).addTo(layers);
     });
-    $("route-len").textContent = steps.length ? `Çizilen: ${Math.round(stepLen(steps))} m` : "";
+    $("route-len").textContent = steps.length ? `${T("Çizilen", "Drawn")}: ${Math.round(stepLen(steps))} m` : "";
   }
 
   function tap(ll) {
@@ -518,16 +518,16 @@
       const d = p.distanceTo(map.latLngToContainerPoint(n));
       if (d < bd) { bd = d; best = i; }
     });
-    if (best < 0) { refuse("Oraya yakın bir kavşak yok – yolun üzerine, kavşağa yakın dokunun (gerekirse büyütün).", ll); return; }
+    if (best < 0) { refuse(T("Oraya yakın bir kavşak yok – yolun üzerine, kavşağa yakın dokunun (gerekirse büyütün).", "No junction near there – tap on the road, close to a junction (zoom in if needed)."), ll); return; }
     if (taps.length && taps[taps.length - 1] === best) return;
     if (taps.length) {
       const h = onModel(taps[taps.length - 1], best) || hop(taps[taps.length - 1], best, qs[qi].closed, steps);
-      if (!h) { refuse("Bu nokta önceki noktadan çok uzak – dokunuş alınmadı. Son mavi noktaya daha yakın bir kavşağa dokunun.", G.nodes[best]); return; }
+      if (!h) { refuse(T("Bu nokta önceki noktadan çok uzak – dokunuş alınmadı. Son mavi noktaya daha yakın bir kavşağa dokunun.", "This point is too far from the previous one – tap not accepted. Tap a junction closer to the last blue dot."), G.nodes[best]); return; }
       hops.push(h.steps.length); steps.push(...h.steps);
     }
     taps.push(best);
     $("route-status").classList.remove("refused");
-    $("route-status").textContent = taps.length === 1 ? "Başladınız. Yol boyunca dokunmaya devam edin; bitince “Rotayı bitir”." : "Devam edin. Yanlış dokunduysanız “Geri al”.";
+    $("route-status").textContent = taps.length === 1 ? T("Başladınız. Yol boyunca dokunmaya devam edin; bitince “Rotayı bitir”.", "Started. Keep tapping along the road; when done, press “Finish route”.") : T("Devam edin. Yanlış dokunduysanız “Geri al”.", "Keep going. If you tapped the wrong place, press “Undo”.");
     draw();
   }
   // Alinmayan dokunus GORUNSUN: eskiden yalniz kucuk gri yazi degisiyordu, aday "harita takildi" saniyordu
@@ -562,7 +562,7 @@
   }
   function submit() {
     if (done) return;
-    if (taps.length < 2) { $("route-status").textContent = "Önce rotayı çizin: en az iki noktaya dokunun."; return; }
+    if (taps.length < 2) { $("route-status").textContent = T("Önce rotayı çizin: en az iki noktaya dokunun.", "Draw the route first: tap at least two points."); return; }
     done = true;
     const q = qs[qi], res = score(q, taps, steps);
     results.push({ q, res });
@@ -571,11 +571,11 @@
     const h = document.createElement("b"); h.textContent = `Puan: ${res.pts} / ${MAX}`; f.append(h);
     res.items.forEach(([k, t]) => { const p = document.createElement("p"); p.className = k === "ok" ? "ok" : "tip"; p.textContent = (k === "ok" ? "✓ " : k === "warn" ? "⚠ " : "✗ ") + t; f.append(p); });
     const lg = document.createElement("p"); lg.className = "ref";
-    lg.textContent = "Haritada: mavi = sizin rotanız, kırmızı = kurala aykırı kısım, yeşil = en direkt yasal rota. Puan kesintileri tahminidir (TfL dağılımı yayınlamıyor); kriterler TfL rehberinden. Değerlendirici ana yolları kullanan makul bir alternatifi de kabul edebilir.";
+    lg.textContent = T("Haritada: mavi = sizin rotanız, kırmızı = kurala aykırı kısım, yeşil = en direkt yasal rota. Puan kesintileri tahminidir (TfL dağılımı yayınlamıyor); kriterler TfL rehberinden. Değerlendirici ana yolları kullanan makul bir alternatifi de kabul edebilir.", "On the map: blue = your route, red = the part that breaks a rule, green = the most direct legal route. Point deductions are estimates (TfL does not publish the breakdown); the criteria come from TfL guidance. An assessor may also accept a sensible alternative that uses main roads.");
     f.append(lg); f.hidden = false;
     ["route-undo", "route-clear", "route-submit"].forEach(id => { $(id).hidden = true; });
     $("route-next").hidden = false;
-    $("route-next").textContent = qi + 1 < qs.length ? "Sonraki rota →" : (isExam() ? "Sonucu gör" : "Yeni rota");
+    $("route-next").textContent = qi + 1 < qs.length ? T("Sonraki rota →", "Next route →") : (isExam() ? T("Sonucu gör", "See result") : T("Yeni rota", "New route"));
     $("route-status").textContent = "";
     // Sonuc tum rotayi gostersin
     map.fitBounds(L.latLngBounds([].concat(...steps.map(stepPts), ...q.best.steps.map(stepPts))), { padding: [30, 30], animate: false });
@@ -584,13 +584,13 @@
     if (qi + 1 < qs.length) { qi++; render(); window.scrollTo(0, 0); return; }
     if (!isExam()) { startRoutes(mode); return; }
     const tot = results.reduce((a, r) => a + r.res.pts, 0);
-    $("route-score").textContent = `Rota puanı: ${tot} / ${MAX * results.length}`;
-    $("route-verdict").textContent = (results.length > 3 ? `Ortalama: rota başına ${(tot / results.length).toFixed(1)} / ${MAX}. ` : "") + `Gerçek sınavda 3 rota var ve 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`;
+    $("route-score").textContent = `${T("Rota puanı", "Route score")}: ${tot} / ${MAX * results.length}`;
+    $("route-verdict").textContent = (results.length > 3 ? T(`Ortalama: rota başına ${(tot / results.length).toFixed(1)} / ${MAX}. `, `Average: ${(tot / results.length).toFixed(1)} / ${MAX} per route. `) : "") + T(`Gerçek sınavda 3 rota var ve 100 puanın 66'sı. Geçmek için toplamda 60 gerekir; rotalardan ne kadar çok puan alırsanız çoktan seçmeli kısımda o kadar rahat edersiniz.`, `The real test has 3 routes worth 66 of the 100 points. You need 60 in total to pass; the more points you get on the routes, the easier the multiple-choice part becomes.`);
     const box = $("route-sum"); box.innerHTML = "";
     results.forEach(({ q, res }) => {
       const d = document.createElement("div"); d.className = "ans";
       const a = document.createElement("div"); a.className = "q"; a.textContent = `${KIND_TR[q.kind]}: ${res.pts} / ${MAX}`;
-      const b = document.createElement("div"); b.className = "muted"; b.style.fontSize = "15px"; b.textContent = `${q.A.n} → ${q.B.n}` + (q.closedName ? ` (kapalı: ${q.closedName})` : "");
+      const b = document.createElement("div"); b.className = "muted"; b.style.fontSize = "15px"; b.textContent = `${q.A.n} → ${q.B.n}` + (q.closedName ? ` (${T("kapalı", "closed")}: ${q.closedName})` : "");
       d.append(a, b);
       res.items.filter(i => i[0] === "no").forEach(i => { const p = document.createElement("div"); p.className = "tip"; p.textContent = "✗ " + i[1]; d.append(p); });
       box.append(d);
@@ -607,8 +607,8 @@
   $("route-undo").onclick = undo;
   $("route-signs").onclick = () => {
     showSigns = !showSigns; vis();
-    $("route-signs").textContent = showSigns ? "🚫 Dönüş yasaklarını gizle" : "🚫 Dönüş yasaklarını göster";
-    if (showSigns && map && map.getZoom() < 16) $("route-status").textContent = "İşaretleri görmek için haritayı büyütün.";
+    $("route-signs").textContent = showSigns ? T("🚫 Dönüş yasaklarını gizle", "🚫 Hide banned turns") : T("🚫 Dönüş yasaklarını göster", "🚫 Show banned turns");
+    if (showSigns && map && map.getZoom() < 16) $("route-status").textContent = T("İşaretleri görmek için haritayı büyütün.", "Zoom in to see the signs.");
   };
   $("route-clear").onclick = () => { if (!done) { taps = []; steps = []; hops = []; draw(); } };
   $("route-submit").onclick = submit;

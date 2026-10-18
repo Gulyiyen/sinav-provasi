@@ -6,6 +6,7 @@
 <link rel="canonical" href="https://gulyiyen.github.io/sinav-provasi/">
 <meta name="google-site-verification" content="G4jS3Upl5cd2m_1q1Y3YgcVw2zZlGf63iYNxGhkO0Qo">
 <title>Sınav Provası</title>
+<script src="i18n.js"></script>
 <meta name="description" content="Londra minicab (PCO) lisansı için ücretsiz sınav provası: sesli İngilizce konuşma sınavı, SERU ve gerçek haritada rota çizme. Açıklamalar Türkçe.">
 <!-- Paylasim karti (Facebook, WhatsApp...): Ingilizce, sayfa adiyla ayni. Gorsel: og-image.png (kaynak repo disinda, pazarlama klasoru gorsel-og.html) -->
 <meta property="og:type" content="website">
@@ -160,6 +161,9 @@
   .rowbtn { display: flex; gap: 8px; margin-top: 8px; }
   .rowbtn .small { flex: 1; }
   .rowbtn .small.go { background: var(--green); border-color: var(--green); font-weight: 700; }
+  .langbar { display: flex; justify-content: flex-end; gap: 6px; }
+  .langbar button { background: transparent; border: 1px solid #33465a; color: #9fb0c0; border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer; }
+  .langbar button.on { background: #1fb36b; border-color: #1fb36b; color: #06210f; font-weight: 700; }
 </style>
 <!-- Ziyaret sayaci: GoatCounter (cerezsiz, kisisel veri tutmaz). Kanal olcumu: linke ?ref=facebook gibi ek. -->
 <script data-goatcounter="https://sinavprovasi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
@@ -169,55 +173,56 @@
 
   <!-- 1. Karsilama (Turkce) -->
   <section class="screen on" id="s-home">
-    <h1>Sınav Provası</h1>
-    <p class="muted">Londra minicab (PCO) lisansı için hazırlık</p>
+    <div class="langbar"><button data-lang="en" onclick="setLang('en')">English</button><button data-lang="tr" onclick="setLang('tr')">Türkçe</button></div>
+    <h1 data-en="Private Hire Test London">Sınav Provası</h1>
+    <p class="muted" data-en="Practice for the London PCO (private hire) licence tests">Londra minicab (PCO) lisansı için hazırlık</p>
     <button class="menu" data-go="s-intro">
       <span class="ico">🗣</span>
-      <span><b>İngilizce konuşma provası</b><br><span class="muted">B1 Speaking &amp; Listening – sınav görevlisi sizi arar, soru sorar</span></span>
+      <span data-en="&lt;b&gt;English speaking practice&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;muted&quot;&gt;B1 Speaking &amp; Listening – the examiner calls you and asks questions&lt;/span&gt;"><b>İngilizce konuşma provası</b><br><span class="muted">B1 Speaking &amp; Listening – sınav görevlisi sizi arar, soru sorar</span></span>
     </button>
     <button class="menu" data-go="s-seru-intro">
       <span class="ico">📘</span>
-      <span><b>SERU testi</b><br><span class="muted">Kurallar, güvenlik, eşitlik – TfL el kitabından sorular, Türkçe açıklamalı</span></span>
+      <span data-en="&lt;b&gt;SERU test&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;muted&quot;&gt;Rules, safety, equality – questions from the TfL handbook, with explanations&lt;/span&gt;"><b>SERU testi</b><br><span class="muted">Kurallar, güvenlik, eşitlik – TfL el kitabından sorular, Türkçe açıklamalı</span></span>
     </button>
     <button class="menu" data-go="s-topo-intro">
       <span class="ico">🗺</span>
-      <span><b>Harita testi (Topographical)</b><br><span class="muted">Gerçek Londra haritasında yön, kare, sokak, yol numarası, işaretler</span></span>
+      <span data-en="&lt;b&gt;Map test (Topographical)&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;muted&quot;&gt;Directions, grid squares, streets, road numbers and signs on a real London map&lt;/span&gt;"><b>Harita testi (Topographical)</b><br><span class="muted">Gerçek Londra haritasında yön, kare, sokak, yol numarası, işaretler</span></span>
     </button>
-    <p style="text-align:center;margin-top:18px"><a href="rehber/" style="color:#7fb4ff">📖 PCO lisansı ve sınavlar hakkında Türkçe rehber</a></p>
-    <p class="muted" style="text-align:center;font-size:13px;margin-top:8px">TfL ile bağlantılı değildir; bağımsız bir hazırlık kaynağıdır.</p>
+    <p data-only="tr" style="text-align:center;margin-top:18px"><a href="rehber/" style="color:#7fb4ff">📖 PCO lisansı ve sınavlar hakkında Türkçe rehber</a></p>
+    <p class="muted" style="text-align:center;font-size:13px;margin-top:8px" data-en="Not affiliated with TfL. An independent practice resource.">TfL ile bağlantılı değildir; bağımsız bir hazırlık kaynağıdır.</p>
   </section>
 
   <section class="screen" id="s-intro">
-    <button class="back" data-go="s-home">← Ana menü</button>
-    <h1>Konuşma Provası</h1>
-    <p class="muted">TfL B1 İngilizce konuşma sınavı provası</p>
+    <button class="back" data-go="s-home" data-en="← Main menu">← Ana menü</button>
+    <h1 data-en="Speaking practice">Konuşma Provası</h1>
+    <p class="muted" data-en="Practice for the TfL B1 English speaking test">TfL B1 İngilizce konuşma sınavı provası</p>
 
     <div class="card">
-      <p><b>Nasıl çalışır?</b></p>
-      <ol class="steps">
+      <p data-en="&lt;b&gt;How does it work?&lt;/b&gt;"><b>Nasıl çalışır?</b></p>
+      <ol class="steps" data-en="&lt;li&gt;Choose a part. The examiner &lt;b&gt;calls&lt;/b&gt; you and speaks English.&lt;/li&gt;&lt;li&gt;Listen to the question, then &lt;b&gt;answer in English&lt;/b&gt;, as if on the phone.&lt;/li&gt;&lt;li&gt;When you finish, press &lt;b&gt;“I've finished”&lt;/b&gt;.&lt;/li&gt;&lt;li&gt;At the end you see what you said in writing.&lt;/li&gt;">
         <li>Bir bölüm seçin. Sınav görevlisi sizi <b>arar</b> ve İngilizce konuşur.</li>
         <li>Soruyu dinleyin, sonra <b>İngilizce cevap verin</b>. Telefonla konuşur gibi.</li>
         <li>Cevabınız bitince <b>“Cevabım bitti”</b> düğmesine basın.</li>
         <li>Sonunda söylediklerinizi yazılı olarak görürsünüz.</li>
       </ol>
-      <p class="muted">Puan yok, kayıt yok. Sesiniz saklanmaz. İstediğiniz kadar tekrar edin.</p>
+      <p class="muted" data-en="No score, no recording. Your voice is not stored. Repeat as often as you like.">Puan yok, kayıt yok. Sesiniz saklanmaz. İstediğiniz kadar tekrar edin.</p>
     </div>
 
     <div class="card warn" id="support-warn" hidden></div>
 
     <div class="spacer"></div>
-    <button class="big green" id="btn-start-full">🎓 Tam sınav provası – 4 bölüm</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Gerçek sınav gibi, baştan sona yaklaşık 15 dakika</p>
-    <p class="muted" style="text-align:center;font-size:14px;margin:14px 0 0">ya da tek bir bölümü çalışın:</p>
-    <button class="big blue" id="btn-start">📞 Bölüm 1 – Kişisel sorular</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Kendiniz, aileniz, işiniz, Londra hakkında 10 soru</p>
-    <button class="big blue" id="btn-start-rp">🎭 Bölüm 2 – Rol yapma</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">2 durum: birini görevli, birini SİZ başlatırsınız</p>
-    <button class="big blue" id="btn-start-p3">🖼 Bölüm 3 – Resimlerle karar verme</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Ekrandaki resimlere bakıp görevliyle birlikte bir plan yapın</p>
-    <button class="big blue" id="btn-start-p4">👂 Bölüm 4 – Dinleme ve kısa konuşma</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Kısa bir metni dinleyip 3 soru cevaplayın, sonra 1,5 dakika bir konu anlatın</p>
-    <p class="muted" style="text-align:center;font-size:14px">Telefon sizden mikrofon izni isteyecek – “İzin ver” deyin.</p>
+    <button class="big green" id="btn-start-full" data-en="🎓 Full mock test – 4 parts">🎓 Tam sınav provası – 4 bölüm</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="Like the real test, about 15 minutes from start to finish">Gerçek sınav gibi, baştan sona yaklaşık 15 dakika</p>
+    <p class="muted" style="text-align:center;font-size:14px;margin:14px 0 0" data-en="or practise one part:">ya da tek bir bölümü çalışın:</p>
+    <button class="big blue" id="btn-start" data-en="📞 Part 1 – Personal questions">📞 Bölüm 1 – Kişisel sorular</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="10 questions about you, your family, your work and London">Kendiniz, aileniz, işiniz, Londra hakkında 10 soru</p>
+    <button class="big blue" id="btn-start-rp" data-en="🎭 Part 2 – Role-play">🎭 Bölüm 2 – Rol yapma</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="2 situations: the examiner starts one, YOU start the other">2 durum: birini görevli, birini SİZ başlatırsınız</p>
+    <button class="big blue" id="btn-start-p3" data-en="🖼 Part 3 – Deciding together with pictures">🖼 Bölüm 3 – Resimlerle karar verme</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="Look at the pictures and make a plan with the examiner">Ekrandaki resimlere bakıp görevliyle birlikte bir plan yapın</p>
+    <button class="big blue" id="btn-start-p4" data-en="👂 Part 4 – Listening and a short talk">👂 Bölüm 4 – Dinleme ve kısa konuşma</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="Listen to a short text and answer 3 questions, then talk about a topic for 1.5 minutes">Kısa bir metni dinleyip 3 soru cevaplayın, sonra 1,5 dakika bir konu anlatın</p>
+    <p class="muted" style="text-align:center;font-size:14px" data-en="Your phone will ask for microphone permission – tap “Allow”.">Telefon sizden mikrofon izni isteyecek – “İzin ver” deyin.</p>
   </section>
 
   <!-- 2. Arama -->
@@ -226,39 +231,39 @@
       <div class="avatar" id="avatar">
         <svg viewBox="0 0 24 24" fill="#cfe0f0"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.6 4.3-7 8.5-7s7.7 2.4 8.5 7z"/></svg>
       </div>
-      <div class="name">Sınav görevlisi</div>
+      <div class="name" data-en="Examiner">Sınav görevlisi</div>
       <div class="timer" id="timer">00:00</div>
     </div>
 
-    <div class="status" id="status">Bağlanıyor…</div>
+    <div class="status" id="status" data-en="Connecting…">Bağlanıyor…</div>
     <div class="progress" id="progress"></div>
 
     <div class="card rpcard" id="rpcard" hidden></div>
 
     <div class="card qtext" id="qtext"></div>
 
-    <div class="card transcript" id="transcript"><span class="muted">Söyledikleriniz burada yazıya dökülecek.</span></div>
+    <div class="card transcript" id="transcript" data-en="&lt;span class=&quot;muted&quot;&gt;What you say will be written here.&lt;/span&gt;"><span class="muted">Söyledikleriniz burada yazıya dökülecek.</span></div>
 
     <div class="row">
-      <button class="small" id="btn-repeat" disabled>🔁 Soruyu tekrar dinle</button>
-      <button class="small" id="btn-show">👁 Soruyu yazılı gör</button>
+      <button class="small" id="btn-repeat" disabled data-en="🔁 Hear the question again">🔁 Soruyu tekrar dinle</button>
+      <button class="small" id="btn-show" data-en="👁 Show the question">👁 Soruyu yazılı gör</button>
     </div>
 
     <div class="spacer"></div>
-    <button class="big blue" id="btn-done" disabled>✓ Cevabım bitti</button>
-    <button class="big red" id="btn-hangup">Aramayı bitir</button>
+    <button class="big blue" id="btn-done" disabled data-en="✓ I've finished">✓ Cevabım bitti</button>
+    <button class="big red" id="btn-hangup" data-en="End call">Aramayı bitir</button>
   </section>
 
   <!-- 3. Sonuc -->
   <section class="screen" id="s-result">
-    <h1>Prova bitti 👏</h1>
+    <h1 data-en="Practice finished 👏">Prova bitti 👏</h1>
     <p class="muted" id="result-meta"></p>
-    <p class="muted" style="font-size:15px">Her sorunun altındaki <b>🔊 Örnek cevabı dinle</b> ile iyi bir cevabın nasıl kurulduğunu duyabilirsiniz. Kendi bilgilerinizle değiştirin, ezberlemeyin.</p>
+    <p class="muted" style="font-size:15px" data-en="Use &lt;b&gt;🔊 Hear a sample answer&lt;/b&gt; under each question to hear how a good answer is built. Change it to your own details – don't memorise it.">Her sorunun altındaki <b>🔊 Örnek cevabı dinle</b> ile iyi bir cevabın nasıl kurulduğunu duyabilirsiniz. Kendi bilgilerinizle değiştirin, ezberlemeyin.</p>
     <div class="card" id="answers"></div>
 
     <div class="card">
-      <p><b>Gerçek sınavda işe yarayan 3 şey</b></p>
-      <ol class="steps">
+      <p data-en="&lt;b&gt;3 things that help in the real test&lt;/b&gt;"><b>Gerçek sınavda işe yarayan 3 şey</b></p>
+      <ol class="steps" data-en="&lt;li&gt;Don't answer with one word. Say &lt;b&gt;2–3 sentences&lt;/b&gt;: answer + reason + a small example.&lt;/li&gt;&lt;li&gt;If you don't understand, that's fine. Say: &lt;b&gt;“Sorry, could you repeat that, please?”&lt;/b&gt;&lt;/li&gt;&lt;li&gt;Give yourself time to think: &lt;b&gt;“That's a good question…”&lt;/b&gt; / &lt;b&gt;“Let me think…”&lt;/b&gt;&lt;/li&gt;">
         <li>Tek kelimeyle cevap vermeyin. <b>2–3 cümle</b> kurun: cevap + neden + küçük bir örnek.</li>
         <li>Soruyu anlamazsanız sorun değil, şunu söyleyin: <b>“Sorry, could you repeat that, please?”</b></li>
         <li>Düşünmek için zaman kazanın: <b>“That's a good question…”</b> / <b>“Let me think…”</b></li>
@@ -266,131 +271,131 @@
     </div>
 
     <div class="spacer"></div>
-    <button class="big green" id="btn-again">🔁 Yeni sorularla tekrar</button>
-    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
+    <button class="big green" id="btn-again" data-en="🔁 Again with new questions">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home" data-en="← Main menu">← Ana menü</button>
   </section>
 
   <!-- SERU -->
   <section class="screen" id="s-seru-intro">
-    <button class="back" data-go="s-home">← Ana menü</button>
-    <h1>SERU testi</h1>
+    <button class="back" data-go="s-home" data-en="← Main menu">← Ana menü</button>
+    <h1 data-en="SERU test">SERU testi</h1>
     <p class="muted">Safety, Equality and Regulatory Understanding</p>
     <div class="card">
-      <p><b>Gerçek SERU sınavı nasıl yapılıyor?</b></p>
-      <ul class="steps">
+      <p data-en="&lt;b&gt;How does the real SERU test work?&lt;/b&gt;"><b>Gerçek SERU sınavı nasıl yapılıyor?</b></p>
+      <ul class="steps" data-en="&lt;li&gt;At a test centre, on a computer: &lt;b&gt;37 questions&lt;/b&gt;, &lt;b&gt;45 minutes&lt;/b&gt;&lt;/li&gt;&lt;li&gt;18 multiple choice + 17 fill in the gaps + 2 reading comprehension&lt;/li&gt;&lt;li&gt;You need &lt;b&gt;60%&lt;/b&gt; to pass&lt;/li&gt;&lt;li&gt;Questions come from TfL's &lt;i&gt;PHV Driver's Handbook&lt;/i&gt; (version 1.0)&lt;/li&gt;">
         <li>Test merkezinde, bilgisayar başında yapılır: <b>37 soru</b>, <b>45 dakika</b></li>
         <li>18 çoktan seçmeli + 17 cümle tamamlama + 2 okuma-anlama</li>
         <li>Geçmek için <b>%60</b> gerekiyor</li>
         <li>Sorular TfL'in <i>PHV Driver's Handbook</i> kitabından (sürüm 1.0)</li>
       </ul>
-      <p class="muted" style="font-size:15px">Buradaki <span id="seru-count"></span> soru aynı kitaptan hazırlandı. Bu prova telefonda da bilgisayarda da çalışır. Sorular İngilizce – gerçek sınav gibi. İsterseniz Türkçesine bakabilirsiniz.</p>
+      <p class="muted" style="font-size:15px" data-en="The &lt;span id=&quot;seru-count&quot;&gt;&lt;/span&gt; questions here are based on the same handbook. Works on phone and computer. Questions are in English, as in the real test, with an explanation for every answer.">Buradaki <span id="seru-count"></span> soru aynı kitaptan hazırlandı. Bu prova telefonda da bilgisayarda da çalışır. Sorular İngilizce – gerçek sınav gibi. İsterseniz Türkçesine bakabilirsiniz.</p>
     </div>
     <div class="spacer"></div>
-    <button class="big blue" id="seru-practice">⚡ Hızlı alıştırma – 10 soru</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
-    <button class="big green" id="seru-exam">📝 Sınav provası – 37 soru, 45 dk</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Gerçek sınav gibi – açıklamalar sonda</p>
+    <button class="big blue" id="seru-practice" data-en="⚡ Quick practice – 10 questions">⚡ Hızlı alıştırma – 10 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="An explanation after every answer">Her cevaptan sonra Türkçe açıklama</p>
+    <button class="big green" id="seru-exam" data-en="📝 Mock test – 37 questions, 45 min">📝 Sınav provası – 37 soru, 45 dk</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="Like the real test – explanations at the end">Gerçek sınav gibi – açıklamalar sonda</p>
   </section>
 
   <section class="screen" id="s-seru-q">
     <div class="seru-top">
       <span class="progress" id="seru-progress"></span>
       <span class="timer" id="seru-timer"></span>
-      <button class="small" id="seru-quit">Bitir</button>
+      <button class="small" id="seru-quit" data-en="Finish">Bitir</button>
     </div>
     <p class="qtype" id="seru-type"></p>
     <div class="card passage" id="seru-passage" hidden></div>
     <p class="seru-q" id="seru-qtext"></p>
-    <button class="small" id="seru-trbtn">🇹🇷 Türkçesini göster</button>
+    <button class="small" id="seru-trbtn" data-only="tr">🇹🇷 Türkçesini göster</button>
     <p class="card tr" id="seru-tr" hidden></p>
     <div id="seru-opts"></div>
     <div class="card feedback" id="seru-feedback" hidden></div>
     <div class="spacer"></div>
-    <button class="big blue" id="seru-next" disabled>Sonraki →</button>
+    <button class="big blue" id="seru-next" disabled data-en="Next →">Sonraki →</button>
   </section>
 
   <section class="screen" id="s-seru-result">
-    <h1>Sonuç</h1>
+    <h1 data-en="Result">Sonuç</h1>
     <p class="score" id="seru-score"></p>
     <p class="verdict" id="seru-verdict"></p>
     <p class="muted" id="seru-meta"></p>
-    <h2 id="seru-wrong-title">Yanlışlarınız – okuyun, öğrenin</h2>
+    <h2 id="seru-wrong-title" data-en="Your mistakes – read and learn">Yanlışlarınız – okuyun, öğrenin</h2>
     <div class="card" id="seru-wrong"></div>
     <div class="spacer"></div>
-    <button class="big green" id="seru-again">🔁 Yeni sorularla tekrar</button>
-    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
+    <button class="big green" id="seru-again" data-en="🔁 Again with new questions">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home" data-en="← Main menu">← Ana menü</button>
   </section>
 
   <!-- Harita (Topographical) -->
   <section class="screen" id="s-topo-intro">
-    <button class="back" data-go="s-home">← Ana menü</button>
-    <h1>Harita testi</h1>
+    <button class="back" data-go="s-home" data-en="← Main menu">← Ana menü</button>
+    <h1 data-en="Map test">Harita testi</h1>
     <p class="muted">TfL Topographical Skills Assessment</p>
     <div class="card">
-      <p><b>Gerçek harita sınavı nasıl yapılıyor?</b></p>
-      <ul class="steps">
+      <p data-en="&lt;b&gt;How does the real map test work?&lt;/b&gt;"><b>Gerçek harita sınavı nasıl yapılıyor?</b></p>
+      <ul class="steps" data-en="&lt;li&gt;At a test centre, on a computer, on a map on the screen&lt;/li&gt;&lt;li&gt;&lt;b&gt;66 points:&lt;/b&gt; 3 route-drawing questions (short, short with a road closed, long)&lt;/li&gt;&lt;li&gt;&lt;b&gt;34 points:&lt;/b&gt; multiple choice – signs, landmarks, finding streets, road numbers, compass directions, route planning true/false&lt;/li&gt;&lt;li&gt;You need &lt;b&gt;60%&lt;/b&gt; to pass&lt;/li&gt;">
         <li>Test merkezinde, bilgisayarda, ekrandaki harita üzerinde</li>
         <li><b>66 puan:</b> 3 rota çizme sorusu (kısa, yol kapatmalı kısa, uzun)</li>
         <li><b>34 puan:</b> çoktan seçmeli – işaretler, önemli yerler, sokak bulma, yol numaraları, pusula yönleri, rota planlama doğru/yanlış</li>
         <li>Geçmek için <b>%60</b> gerekiyor</li>
       </ul>
-      <p class="muted" style="font-size:15px">Her iki kısım da burada: çoktan seçmeli sorular ve aşağıda <b>rota çizme</b>. Hepsi gerçek Londra haritasında (OpenStreetMap), her seferinde yeniden üretilir. Haritayı parmakla kaydırıp büyütebilirsiniz.</p>
+      <p class="muted" style="font-size:15px" data-en="Both parts are here: multiple-choice questions and &lt;b&gt;route drawing&lt;/b&gt; below. Everything is on a real London map (OpenStreetMap) and is generated fresh each time. You can drag and zoom the map with your finger.">Her iki kısım da burada: çoktan seçmeli sorular ve aşağıda <b>rota çizme</b>. Hepsi gerçek Londra haritasında (OpenStreetMap), her seferinde yeniden üretilir. Haritayı parmakla kaydırıp büyütebilirsiniz.</p>
     </div>
     <div class="spacer"></div>
-    <button class="big blue" id="topo-practice">⚡ Hızlı alıştırma – 10 soru</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Her cevaptan sonra Türkçe açıklama</p>
-    <button class="big green" id="topo-long">📝 Uzun prova – 50 soru</button>
-    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0">Açıklamalar sonda</p>
+    <button class="big blue" id="topo-practice" data-en="⚡ Quick practice – 10 questions">⚡ Hızlı alıştırma – 10 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="An explanation after every answer">Her cevaptan sonra Türkçe açıklama</p>
+    <button class="big green" id="topo-long" data-en="📝 Long practice – 50 questions">📝 Uzun prova – 50 soru</button>
+    <p class="muted" style="text-align:center;font-size:14px;margin:4px 0 0" data-en="Explanations at the end">Açıklamalar sonda</p>
 
-    <h2>🧭 Rota çizme (66 puan)</h2>
-    <p class="muted" style="font-size:15px;margin-top:0">Haritada yeşilden kırmızıya en direkt rotayı çizin. Tek yönler, yasak dönüşler ve kapalı yol gerçek Londra verisinden kontrol edilir.</p>
-    <button class="big green" id="route-exam">📝 Sınav provası – 3 rota (gerçek sınav gibi)</button>
-    <button class="big blue" id="route-exam9">📚 Uzun prova – 9 rota (3 kısa, 3 yol kapalı, 3 uzun)</button>
+    <h2 data-en="🧭 Route drawing (66 points)">🧭 Rota çizme (66 puan)</h2>
+    <p class="muted" style="font-size:15px;margin-top:0" data-en="Draw the most direct route on the map from green to red. One-way streets, banned turns and the closed road are checked against real London data.">Haritada yeşilden kırmızıya en direkt rotayı çizin. Tek yönler, yasak dönüşler ve kapalı yol gerçek Londra verisinden kontrol edilir.</p>
+    <button class="big green" id="route-exam" data-en="📝 Mock test – 3 routes (like the real test)">📝 Sınav provası – 3 rota (gerçek sınav gibi)</button>
+    <button class="big blue" id="route-exam9" data-en="📚 Long practice – 9 routes (3 short, 3 road closed, 3 long)">📚 Uzun prova – 9 rota (3 kısa, 3 yol kapalı, 3 uzun)</button>
     <div class="rowbtn">
-      <button class="small" id="route-short">Kısa rota</button>
-      <button class="small" id="route-closed">Yol kapalı</button>
-      <button class="small" id="route-long">Uzun rota</button>
+      <button class="small" id="route-short" data-en="Short route">Kısa rota</button>
+      <button class="small" id="route-closed" data-en="Road closed">Yol kapalı</button>
+      <button class="small" id="route-long" data-en="Long route">Uzun rota</button>
     </div>
   </section>
 
   <section class="screen" id="s-route">
     <div class="seru-top">
       <span class="progress" id="route-progress"></span>
-      <button class="small" data-go="s-topo-intro">Çık</button>
+      <button class="small" data-go="s-topo-intro" data-en="Exit">Çık</button>
     </div>
     <p class="seru-q" id="route-q" style="font-size:17px"></p>
     <div id="route-map"></div>
     <p class="muted" id="route-status" style="font-size:15px;min-height:22px"></p>
-    <p class="muted" style="font-size:13px;margin-top:0">Tek yönler haritadaki ince oklardır. Yasak dönüş yaparsanız, rotayı bitirince o kavşaktaki işaret gösterilir.</p>
+    <p class="muted" style="font-size:13px;margin-top:0" data-en="One-way streets are the thin arrows on the map. If you make a banned turn, the sign at that junction is shown when you finish the route.">Tek yönler haritadaki ince oklardır. Yasak dönüş yaparsanız, rotayı bitirince o kavşaktaki işaret gösterilir.</p>
     <div class="rowbtn">
-      <button class="small" id="route-undo">↶ Geri al</button>
-      <button class="small" id="route-clear">🗑 Temizle</button>
-      <button class="small go" id="route-submit">✓ Rotayı bitir</button>
+      <button class="small" id="route-undo" data-en="↶ Undo">↶ Geri al</button>
+      <button class="small" id="route-clear" data-en="🗑 Clear">🗑 Temizle</button>
+      <button class="small go" id="route-submit" data-en="✓ Finish route">✓ Rotayı bitir</button>
     </div>
     <div class="row" style="justify-content:space-between;align-items:center">
-      <button class="small" id="route-trbtn">🇹🇷 Türkçesi</button>
-      <button class="small" id="route-signs">🚫 Dönüş yasaklarını göster</button>
+      <button class="small" id="route-trbtn" data-only="tr">🇹🇷 Türkçesi</button>
+      <button class="small" id="route-signs" data-en="🚫 Show banned turns">🚫 Dönüş yasaklarını göster</button>
       <span class="muted" id="route-len" style="font-size:14px"></span>
     </div>
     <p class="card tr" id="route-tr" hidden></p>
     <div class="card feedback" id="route-feedback" hidden></div>
-    <button class="big blue" id="route-next" hidden>Sonraki rota →</button>
+    <button class="big blue" id="route-next" hidden data-en="Next route →">Sonraki rota →</button>
   </section>
 
   <section class="screen" id="s-route-result">
-    <h1>Rota sonucu</h1>
+    <h1 data-en="Route result">Rota sonucu</h1>
     <p class="score" id="route-score"></p>
     <p class="verdict" id="route-verdict"></p>
     <div class="card" id="route-sum"></div>
     <div class="spacer"></div>
-    <button class="big green" id="route-again">🔁 Yeni rotalarla tekrar</button>
-    <button class="small" style="margin-top:12px" data-go="s-topo-intro">← Harita testi</button>
+    <button class="big green" id="route-again" data-en="🔁 Again with new routes">🔁 Yeni rotalarla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-topo-intro" data-en="← Map test">← Harita testi</button>
   </section>
 
   <section class="screen" id="s-topo-q">
     <div class="seru-top">
       <span class="progress" id="topo-progress"></span>
-      <button class="small" id="topo-quit">Bitir</button>
+      <button class="small" id="topo-quit" data-en="Finish">Bitir</button>
     </div>
     <p class="qtype" id="topo-type"></p>
     <p class="seru-q" id="topo-qtext"></p>
@@ -399,28 +404,29 @@
     </div>
     <div class="signbox" id="topo-sign" hidden></div>
     <div class="row" style="justify-content:flex-start">
-      <button class="small" id="topo-trbtn">🇹🇷 Türkçesini göster</button>
-      <button class="small" id="topo-reset">↺ Haritayı ortala</button>
+      <button class="small" id="topo-trbtn" data-only="tr">🇹🇷 Türkçesini göster</button>
+      <button class="small" id="topo-reset" data-en="↺ Re-centre map">↺ Haritayı ortala</button>
     </div>
     <p class="card tr" id="topo-tr" hidden></p>
     <div id="topo-opts"></div>
     <div class="card feedback" id="topo-feedback" hidden></div>
     <div class="spacer"></div>
-    <button class="big blue" id="topo-next" disabled>Sonraki →</button>
+    <button class="big blue" id="topo-next" disabled data-en="Next →">Sonraki →</button>
   </section>
 
   <section class="screen" id="s-topo-result">
-    <h1>Sonuç</h1>
+    <h1 data-en="Result">Sonuç</h1>
     <p class="score" id="topo-score"></p>
     <p class="verdict" id="topo-verdict"></p>
     <p class="muted" id="topo-meta"></p>
-    <h2 id="topo-wrong-title">Yanlışlarınız – okuyun, öğrenin</h2>
+    <h2 id="topo-wrong-title" data-en="Your mistakes – read and learn">Yanlışlarınız – okuyun, öğrenin</h2>
     <div class="card" id="topo-wrong"></div>
     <div class="spacer"></div>
-    <button class="big green" id="topo-again">🔁 Yeni sorularla tekrar</button>
-    <button class="small" style="margin-top:12px" data-go="s-home">← Ana menü</button>
+    <button class="big green" id="topo-again" data-en="🔁 Again with new questions">🔁 Yeni sorularla tekrar</button>
+    <button class="small" style="margin-top:12px" data-go="s-home" data-en="← Main menu">← Ana menü</button>
   </section>
 </div>
+<script>applyLang();</script>
 
 <script src="roleplay-data.js"></script>
 <script src="part34-data.js"></script>
@@ -568,8 +574,8 @@
 
   // ---- Destek kontrolu ----
   const warn = [];
-  if (!synth) warn.push("Bu tarayıcı sesli okuma yapamıyor.");
-  if (!SR) warn.push("Bu tarayıcı konuşmanızı yazıya dökemiyor. Prova yine çalışır ama sonunda yazı görmezsiniz. En iyisi: <b>Chrome</b>.");
+  if (!synth) warn.push(T("Bu tarayıcı sesli okuma yapamıyor.", "This browser cannot read text aloud."));
+  if (!SR) warn.push(T("Bu tarayıcı konuşmanızı yazıya dökemiyor. Prova yine çalışır ama sonunda yazı görmezsiniz. En iyisi: <b>Chrome</b>.", "This browser cannot turn your speech into text. The practice still works, but you won't see your words at the end. Best: <b>Chrome</b>."));
   if (warn.length) { $("support-warn").innerHTML = warn.join("<br>"); $("support-warn").hidden = false; }
 
   // ---- Ingiliz sesi sec ----
@@ -608,10 +614,10 @@
   const RP_NEXT = "Thank you. Second situation.";
   const RP_CLOSING = "Thank you. That is the end of the role plays.";
   const RP = (window.ROLEPLAYS || []).map(r => ({
-    card: r.card,
+    card: T(r.card, r.cardEn || r.card),
     lines: r.lines.map((l, k) => ({ q: k === 0 ? r.intro + " " + l[0] : l[0], a: l[1] }))
   }));
-  const RPB = (window.ROLEPLAYS_B || []).map(r => ({ card: r.card, lines: r.lines.map(l => ({ q: l[0], a: l[1] })) }));
+  const RPB = (window.ROLEPLAYS_B || []).map(r => ({ card: T(r.card, r.cardEn || r.card), lines: r.lines.map(l => ({ q: l[0], a: l[1] })) }));
   RP.concat(RPB).forEach(r => r.lines.forEach(l => { SAMPLE[l.q] = l.a; }));
   const RP_TEXTS = RP.concat(RPB).flatMap(r => r.lines.map(l => l.q)).concat([RP_FIRST, RP_NEXT, RP_CLOSING]);
   // Bolum 3 (resimlerle birlikte karar) ve Bolum 4 (dinleme + kisa konusma): part34-data.js
@@ -717,7 +723,7 @@
   let rec = null, listening = false, finalText = "", interimText = "";
   function renderTranscript() {
     const t = $("transcript");
-    if (!finalText && !interimText) { t.innerHTML = '<span class="muted">Konuşun… söyledikleriniz burada görünecek.</span>'; return; }
+    if (!finalText && !interimText) { t.innerHTML = '<span class="muted">' + T("Konuşun… söyledikleriniz burada görünecek.", "Speak… your words will appear here.") + '</span>'; return; }
     t.textContent = finalText + " ";
     if (interimText) { const s = document.createElement("span"); s.className = "interim"; s.textContent = interimText; t.appendChild(s); }
   }
@@ -741,7 +747,7 @@
     rec.onerror = e => {
       dbg("rec error " + e.error);
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        $("transcript").innerHTML = '<span class="muted">Mikrofon izni verilmedi. Yine de konuşabilirsiniz; sadece yazı görünmez.</span>';
+        $("transcript").innerHTML = '<span class="muted">' + T("Mikrofon izni verilmedi. Yine de konuşabilirsiniz; sadece yazı görünmez.", "Microphone permission was not given. You can still speak; your words just won't be shown.") + '</span>';
         listening = false;
       }
     };
@@ -819,22 +825,22 @@
   function showCard(c) {
     const box = $("rpcard"); box.innerHTML = ""; box.className = "card rpcard";
     const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-    if (c.kind === "role") box.append(el("b", null, "🎭 Rol kartınız"), el("span", null, c.text));
+    if (c.kind === "role") box.append(el("b", null, T("🎭 Rol kartınız", "🎭 Your role card")), el("span", null, c.text));
     if (c.kind === "sheet") {
       box.classList.add("sheet");
-      box.append(el("b", null, "🖼 Görev kâğıdı – " + c.title), el("p", "muted", c.tr));
+      box.append(el("b", null, T("🖼 Görev kâğıdı – ", "🖼 Task sheet – ") + c.title), el("p", "muted", c.tr));
       const g = el("div", "sheetgrid");
       c.items.concat([["❓", "Anything else?"]]).forEach(([e, n]) => { const t = el("div", "tile"); t.append(el("div", "emo", e), el("div", null, n)); g.append(t); });
       box.append(g);
     }
     if (c.kind === "qs") {
-      box.append(el("b", null, "👂 Dinleyin – sonra bu 3 soruyu cevaplayın"));
+      box.append(el("b", null, T("👂 Dinleyin – sonra bu 3 soruyu cevaplayın", "👂 Listen – then answer these 3 questions")));
       const ol = el("ol", "steps"); c.list.forEach(q => ol.append(el("li", null, q))); box.append(ol);
-      box.append(el("p", "muted", "Görevli metni iki kez okuyacak. Not alabilirsiniz."));
+      box.append(el("p", "muted", T("Görevli metni iki kez okuyacak. Not alabilirsiniz.", "The examiner will read the text twice. You can take notes.")));
     }
     if (c.kind === "topic") {
-      box.append(el("b", null, "🗣 Konunuz: " + c.topic), el("p", "muted", c.tr));
-      box.append(el("p", null, "Not alın: Ne? Nerede / ne zaman? Kiminle? Neden seviyorsunuz? Bir örnek. Nasıl hissettiniz?"));
+      box.append(el("b", null, T("🗣 Konunuz: ", "🗣 Your topic: ") + c.topic), el("p", "muted", c.tr));
+      box.append(el("p", null, T("Not alın: Ne? Nerede / ne zaman? Kiminle? Neden seviyorsunuz? Bir örnek. Nasıl hissettiniz?", "Make notes: What? Where / when? Who with? Why do you like it? An example. How did you feel?")));
     }
     box.hidden = false;
   }
@@ -843,12 +849,12 @@
   function countdown(sec, label) {
     return new Promise(resolve => {
       let left = sec;
-      const done = () => { clearInterval(id); skipPrep = null; $("btn-done").textContent = "✓ Cevabım bitti"; resolve(); };
+      const done = () => { clearInterval(id); skipPrep = null; $("btn-done").textContent = T("✓ Cevabım bitti", "✓ I've finished"); resolve(); };
       const draw = () => setStatus(`⏳ ${label}: ${left} sn`);
       draw();
       const id = setInterval(() => { if (!active) return done(); left--; if (left <= 0) done(); else draw(); }, 1000);
       skipPrep = done;
-      $("btn-done").textContent = "✓ Hazırım, başlayayım"; $("btn-done").disabled = false;
+      $("btn-done").textContent = T("✓ Hazırım, başlayayım", "✓ I'm ready, let's start"); $("btn-done").disabled = false;
     });
   }
 
@@ -857,23 +863,23 @@
     const q = questions[i], m = meta[i] || {};
     $("qtext").textContent = q;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
-    setStatus("Görevli konuşuyor… dinleyin");
-    $("progress").textContent = m.prog || `Soru ${i + 1} / ${questions.length}`;
+    setStatus(T("Görevli konuşuyor… dinleyin", "The examiner is speaking… listen"));
+    $("progress").textContent = m.prog || `${T("Soru", "Question")} ${i + 1} / ${questions.length}`;
     if (m.card) showCard(m.card);
     for (const x of m.pre || []) {
       if (typeof x === "number") await wait(x); else await say(x);
       if (!active || idx !== i) return;
     }
-    if (m.prep) { await countdown(m.prep, "Hazırlık – not alın"); if (!active || idx !== i) return; $("btn-done").disabled = true; }
+    if (m.prep) { await countdown(m.prep, T("Hazırlık – not alın", "Preparation – make notes")); if (!active || idx !== i) return; $("btn-done").disabled = true; }
     await say(q);
     if (!active || idx !== i) return;
     $("btn-done").disabled = false; $("btn-repeat").disabled = !!m.talk;
     startListening();
     if (m.talk) {
       // Bolum 4B: 1,5 dk kesintisiz konusma; sure dolunca gorevli "Thank you" der ve devam eder
-      $("btn-done").textContent = "✓ Konuşmam bitti";
+      $("btn-done").textContent = T("✓ Konuşmam bitti", "✓ I've finished my talk");
       let left = m.talk;
-      const draw = () => setStatus(`<span class="mic"></span>Konuşun – kalan ${mmss(left)}`, "listen");
+      const draw = () => setStatus(`<span class="mic"></span>${T("Konuşun – kalan", "Speak – time left")} ${mmss(left)}`, "listen");
       draw();
       clearInterval(talkId);
       talkId = setInterval(() => {
@@ -881,7 +887,7 @@
         left--; if (left <= 0) { clearInterval(talkId); answerDone(); } else draw();
       }, 1000);
     } else {
-      setStatus('<span class="mic"></span>' + (m.youStart ? "Konuşmayı SİZ başlatın – İngilizce" : "Sıra sizde – İngilizce cevap verin"), "listen");
+      setStatus('<span class="mic"></span>' + (m.youStart ? T("Konuşmayı SİZ başlatın – İngilizce", "YOU start the conversation – in English") : T("Sıra sizde – İngilizce cevap verin", "Your turn – answer in English")), "listen");
     }
   }
 
@@ -899,13 +905,13 @@
         freshQuestions(t.qs, perTopic).forEach((q, k) => list.push({ q, t, first: k === 0 })));
       list.forEach((x, k) => add(x.q, {
         kind: "p1", pre: x.first ? [x.t.intro] : [],
-        prog: `${P.full ? "Bölüm 1 · " : ""}${x.t ? "Konu: " + x.t.tr + " · " : ""}Soru ${k + 1} / ${list.length}`
+        prog: `${P.full ? T("Bölüm 1 · ", "Part 1 · ") : ""}${x.t ? T("Konu: " + x.t.tr, "Topic: " + x.t.en) + " · " : ""}${T("Soru", "Question")} ${k + 1} / ${list.length}`
       }));
     };
     const part2 = () => {
       const pair = [freshPick("prova-rp-seen", RP, 1)[0], freshPick("prova-rpb-seen", RPB, 1)[0]];
       pair.forEach((rp, j) => rp.lines.forEach((l, k) => add(l.q, {
-        kind: "p2", prog: `${P.full ? "Bölüm 2 · " : ""}Durum ${j + 1} / 2 · ${j === 0 ? "görevli başlatır" : "SİZ başlatırsınız"} · ${k + 1} / ${rp.lines.length}`,
+        kind: "p2", prog: `${P.full ? T("Bölüm 2 · ", "Part 2 · ") : ""}${T("Durum", "Situation")} ${j + 1} / 2 · ${j === 0 ? T("görevli başlatır", "the examiner starts") : T("SİZ başlatırsınız", "YOU start")} · ${k + 1} / ${rp.lines.length}`,
         youStart: j === 1 && k === 0,
         card: k === 0 ? { kind: "role", text: rp.card } : null, pre: k === 0 ? [j === 0 ? RP_FIRST : RP_NEXT] : []
       })));
@@ -913,21 +919,21 @@
     const part3 = () => {
       const t = freshPick("prova-p3-seen", P3, 1)[0];
       t.lines.forEach((l, k) => add(l[0], {
-        kind: "p3", prog: `Bölüm 3 · ${k + 1} / ${t.lines.length}`,
-        card: k === 0 ? { kind: "sheet", title: t.title, items: t.items, tr: t.tr } : null,
+        kind: "p3", prog: `${T("Bölüm", "Part")} 3 · ${k + 1} / ${t.lines.length}`,
+        card: k === 0 ? { kind: "sheet", title: t.title, items: t.items, tr: T(t.tr, t.en || t.tr) } : null,
         pre: k === 0 ? (P.full ? [THANKS, P3_INTRO, t.intro] : [P3_INTRO, t.intro]) : []
       }));
     };
     const part4 = () => {
       const a = freshPick("prova-p4a-seen", P4A, 1)[0], b = freshPick("prova-p4b-seen", P4B, 1)[0];
       a.qs.forEach((x, k) => add(x[0], {
-        kind: "p4a", prog: `Bölüm 4A · Soru ${k + 1} / 3`, expect: { a: x[1], kw: x[2] },
+        kind: "p4a", prog: `${T("Bölüm 4A · Soru", "Part 4A · Question")} ${k + 1} / 3`, expect: { a: x[1], kw: x[2] },
         card: k === 0 ? { kind: "qs", list: a.qs.map(y => y[0]) } : null,
         pre: k === 0 ? (P.full ? [P3_CLOSE] : []).concat([p4aIntro(a), 8000, a.text, P4A_AGAIN, a.text, P4A_QS]) : []
       }));
-      add(P4B_START, { kind: "p4b", prog: "Bölüm 4B · Kısa konuşma (1,5 dk)", card: { kind: "topic", topic: b.topic, tr: b.tr },
-        pre: [THANKS, p4bIntro(b)], prep: 30, talk: 90, label: `Konu: ${b.topic} (1,5 dakika konuşma)`, sample: b.sample });
-      shuffle(b.follow).slice(0, 2).forEach((f, k) => add(f, { kind: "p4f", prog: `Bölüm 4B · Ek soru ${k + 1} / 2`, pre: k === 0 ? [THANKS] : [] }));
+      add(P4B_START, { kind: "p4b", prog: T("Bölüm 4B · Kısa konuşma (1,5 dk)", "Part 4B · Short talk (1.5 min)"), card: { kind: "topic", topic: b.topic, tr: T(b.tr, b.en || b.tr) },
+        pre: [THANKS, p4bIntro(b)], prep: 30, talk: 90, label: T(`Konu: ${b.topic} (1,5 dakika konuşma)`, `Topic: ${b.topic} (1.5-minute talk)`), sample: b.sample });
+      shuffle(b.follow).slice(0, 2).forEach((f, k) => add(f, { kind: "p4f", prog: `${T("Bölüm 4B · Ek soru", "Part 4B · Follow-up question")} ${k + 1} / 2`, pre: k === 0 ? [THANKS] : [] }));
     };
     if (mode === "p2") part2();
     else if (mode === "p3") part3();
@@ -951,15 +957,15 @@
     preloadClips(questions.concat(...meta.map(x => (x.pre || []).filter(p => typeof p === "string")), BETWEEN, [CLOSE[mode], "Of course.", AGAIN_INTRO]));
     $("rpcard").hidden = true;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;  // soru sorulmadan cevap verilemesin
-    $("btn-done").textContent = "✓ Cevabım bitti";
+    $("btn-done").textContent = T("✓ Cevabım bitti", "✓ I've finished");
     idx = 0; answers = []; active = true;
-    $("qtext").classList.remove("on"); $("btn-show").textContent = "👁 Soruyu yazılı gör";
+    $("qtext").classList.remove("on"); $("btn-show").textContent = T("👁 Soruyu yazılı gör", "👁 Show the question");
     show("s-call");
     t0 = Date.now(); tick(); timerId = setInterval(tick, 1000);
-    setStatus("Bağlanıyor…");
+    setStatus(T("Bağlanıyor…", "Connecting…"));
     await wait(1200);
     if (!active) return;  // baglanirken kapatildi
-    if (again && mode === "p1") { setStatus("Görevli konuşuyor… dinleyin"); await say(AGAIN_INTRO); if (!active) return; }
+    if (again && mode === "p1") { setStatus(T("Görevli konuşuyor… dinleyin", "The examiner is speaking… listen")); await say(AGAIN_INTRO); if (!active) return; }
     ask(idx);
   }
 
@@ -968,15 +974,15 @@
     if (!active || $("btn-done").disabled) return;
     clearInterval(talkId); talkId = null;
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
-    $("btn-done").textContent = "✓ Cevabım bitti";
-    setStatus("✓ Cevabınız alındı");
+    $("btn-done").textContent = T("✓ Cevabım bitti", "✓ I've finished");
+    setStatus(T("✓ Cevabınız alındı", "✓ Answer received"));
     answers.push({ q: questions[idx], a: stopListening(), m: meta[idx] || {} });
     idx++;
     if (idx < questions.length) {
       if (meta[idx - 1].kind === "p1") await say(BETWEEN[Math.floor(Math.random() * BETWEEN.length)]);  // diger bolumlerde sohbet kesintisiz akar
       ask(idx);
     } else {
-      setStatus("Görevli konuşuyor…");
+      setStatus(T("Görevli konuşuyor…", "The examiner is speaking…"));
       await say(CLOSE[mode]);
       if (active) endCall();
     }
@@ -992,39 +998,42 @@
     $("btn-done").disabled = true; $("btn-repeat").disabled = true; if (cancelPrev) { cancelPrev(); player.pause(); }
     clearInterval(timerId);
     const secs = Math.floor((Date.now() - t0) / 1000);
-    const unit = { p1: "soru", p2: "replik", p3: "replik", p4: "cevap", full: "cevap" }[mode];
-    $("result-meta").textContent = `${answers.length} ${unit} · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`;
+    const unit = T({ p1: "soru", p2: "replik", p3: "replik", p4: "cevap", full: "cevap" }, { p1: "questions", p2: "replies", p3: "replies", p4: "answers", full: "answers" })[mode];
+    $("result-meta").textContent = T(`${answers.length} ${unit} · süre ${Math.floor(secs / 60)} dk ${secs % 60} sn`, `${answers.length} ${unit} · time ${Math.floor(secs / 60)} min ${secs % 60} s`);
     const box = $("answers"); box.innerHTML = "";
-    if (!answers.length) box.innerHTML = '<p class="muted">Hiç soru cevaplanmadı.</p>';
+    if (!answers.length) box.innerHTML = '<p class="muted">' + T("Hiç soru cevaplanmadı.", "No questions were answered.") + '</p>';
     const MIN = { p1: 12, p2: 8, p3: 12, p4b: 80, p4f: 10 };
-    const TIP = { p1: "Bir “because…” ve bir örnek ekleyin.", p2: "Yolcuya bir açıklama ya da bir öneri ekleyin.",
+    const TIP = T({ p1: "Bir “because…” ve bir örnek ekleyin.", p2: "Yolcuya bir açıklama ya da bir öneri ekleyin.",
                   p3: "Fikrinizi söyleyin ve nedenini ekleyin: “I think… because…”.", p4b: "1,5 dakika boyunca konuşmaya çalışın: ne, nerede, neden, bir örnek.",
-                  p4f: "Bir “because…” ve bir örnek ekleyin." };
+                  p4f: "Bir “because…” ve bir örnek ekleyin." },
+                { p1: "Add a “because…” and an example.", p2: "Give the passenger an explanation or a suggestion.",
+                  p3: "Say your opinion and add a reason: “I think… because…”.", p4b: "Try to keep talking for 1.5 minutes: what, where, why, an example.",
+                  p4f: "Add a “because…” and an example." });
     answers.forEach((x, i) => {
       const m = x.m || {};
       const words = x.a ? x.a.split(/\s+/).length : 0;
       const d = document.createElement("div"); d.className = "ans";
       const q = document.createElement("div"); q.className = "q"; q.textContent = `${i + 1}. ${m.label || x.q}`;
       const a = document.createElement("div"); a.className = "a" + (x.a ? "" : " empty");
-      a.textContent = x.a ? "“" + x.a + "”" : (SR ? "(cevap duyulmadı)" : "(yazıya dökme bu tarayıcıda yok)");
+      a.textContent = x.a ? "“" + x.a + "”" : (SR ? T("(cevap duyulmadı)", "(no answer heard)") : T("(yazıya dökme bu tarayıcıda yok)", "(speech-to-text not available in this browser)"));
       d.append(q, a);
       if (m.expect) {
         // Dinleme sorusu: dogru cevap + duyulan cevapta beklenen kelimeler var mi
         const h = document.createElement("div");
-        if (x.a && heard(x.a, m.expect.kw)) { h.className = "ok"; h.textContent = "✓ Doğru görünüyor – beklenen: " + m.expect.a; }
-        else { h.className = "tip"; h.textContent = "Doğru cevap: " + m.expect.a; }
+        if (x.a && heard(x.a, m.expect.kw)) { h.className = "ok"; h.textContent = T("✓ Doğru görünüyor – beklenen: ", "✓ Looks right – expected: ") + m.expect.a; }
+        else { h.className = "tip"; h.textContent = T("Doğru cevap: ", "Correct answer: ") + m.expect.a; }
         d.append(h);
       } else if (SR && i >= nOpen && MIN[m.kind]) {
         const h = document.createElement("div");
-        if (words < MIN[m.kind]) { h.className = "tip"; h.textContent = `İpucu: ${words} kelime – biraz kısa. ${TIP[m.kind]}`; }
-        else { h.className = "ok"; h.textContent = `${words} kelime – güzel uzunluk.`; }
+        if (words < MIN[m.kind]) { h.className = "tip"; h.textContent = T(`İpucu: ${words} kelime – biraz kısa. `, `Tip: ${words} words – a bit short. `) + TIP[m.kind]; }
+        else { h.className = "ok"; h.textContent = T(`${words} kelime – güzel uzunluk.`, `${words} words – good length.`); }
         d.append(h);
       }
       const sample = m.sample || SAMPLE[x.q];
       if (sample) {
-        const b = document.createElement("button"); b.className = "small sample-btn"; b.textContent = "🔊 Örnek cevabı dinle";
+        const b = document.createElement("button"); b.className = "small sample-btn"; b.textContent = T("🔊 Örnek cevabı dinle", "🔊 Hear a sample answer");
         const t = document.createElement("div"); t.className = "sample"; t.hidden = true;
-        t.textContent = "Örnek: “" + sample + "”";
+        t.textContent = T("Örnek: “", "Sample: “") + sample + "”";
         b.onclick = () => { t.hidden = false; b.textContent = "🔊 Tekrar dinle"; say(sample); };
         d.append(b, t);
       }
@@ -1045,19 +1054,19 @@
   $("btn-repeat").onclick = async () => {
     stopListening();
     $("btn-done").disabled = true; $("btn-repeat").disabled = true;
-    setStatus("Görevli tekrar ediyor…");
+    setStatus(T("Görevli tekrar ediyor…", "The examiner is repeating…"));
     const i = idx;
     await say("Of course.");
     if (!active || idx !== i) return;
     await say(questions[idx]);
     if (!active || idx !== i) return;
-    setStatus('<span class="mic"></span>Sıra sizde – İngilizce cevap verin', "listen");
+    setStatus('<span class="mic"></span>' + T("Sıra sizde – İngilizce cevap verin", "Your turn – answer in English"), "listen");
     $("btn-done").disabled = false; $("btn-repeat").disabled = false;
     startListening();
   };
   $("btn-show").onclick = () => {
     const on = $("qtext").classList.toggle("on");
-    $("btn-show").textContent = on ? "🙈 Yazıyı gizle" : "👁 Soruyu yazılı gör";
+    $("btn-show").textContent = on ? T("🙈 Yazıyı gizle", "🙈 Hide the text") : T("👁 Soruyu yazılı gör", "👁 Show the question");
   };
   // Menu gecisleri
   document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => show(b.dataset.go));
