@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="canonical" href="https://gulyiyen.github.io/sinav-provasi/rush.html">
+<title>SERU Rush – Private Hire Test London</title>
+<script src="i18n.js"></script>
+<meta name="description" content="SERU Rush: a quick daily game with real-style SERU questions for London PCO (private hire) drivers. Same 10 questions for everyone each day – share your score.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Private Hire Test London">
+<meta property="og:title" content="SERU Rush – can you beat my score?">
+<meta property="og:description" content="Daily SERU challenge for London PCO drivers: 10 questions, same for everyone. Free, no sign-up.">
+<meta property="og:url" content="https://gulyiyen.github.io/sinav-provasi/rush.html">
+<meta property="og:image" content="https://gulyiyen.github.io/sinav-provasi/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  /* (c) 2026 Private Hire Test London. All rights reserved. */
+  :root {
+    --bg: #0f1720; --panel: #17222e; --ink: #f3f6f9; --muted: #9fb0c0;
+    --green: #1fb36b; --red: #e5484d; --blue: #3b82f6; --amber: #f5a524; --line: #26384a;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--ink); font: 18px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; }
+  .app { width: 100%; max-width: 480px; min-height: 100%; padding: 20px 16px 32px; display: flex; flex-direction: column; }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.on { display: flex; }
+  h1 { font-size: 34px; margin: 6px 0 2px; letter-spacing: -.5px; }
+  h1 span { color: var(--amber); }
+  p { margin: 8px 0; }
+  .muted { color: var(--muted); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 10px 0; }
+  .big { display: block; width: 100%; border: 0; border-radius: 999px; padding: 18px; font-size: 20px; font-weight: 800; color: #fff; cursor: pointer; margin-top: 12px; }
+  .big.green { background: var(--green); } .big.amber { background: var(--amber); color: #1a1205; } .big.blue { background: var(--blue); }
+  .big:disabled { opacity: .45; cursor: default; }
+  .small { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; font-size: 15px; cursor: pointer; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .langbar button { background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+  .langbar button.on { color: var(--ink); border-color: var(--ink); }
+  .mode b { font-size: 20px; } .mode .ico { font-size: 30px; margin-right: 12px; }
+  .mode { display: flex; align-items: center; text-align: left; background: var(--panel); border: 1px solid var(--line); color: var(--ink); border-radius: 16px; padding: 16px; margin: 10px 0; width: 100%; cursor: pointer; font: inherit; }
+  .mode:active { transform: scale(.98); }
+  .done-tag { display: inline-block; font-size: 13px; color: var(--green); margin-top: 2px; }
+
+  /* Oyun ekrani */
+  .hud { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 20px; margin-bottom: 6px; }
+  .hud .streak { color: var(--amber); min-width: 70px; text-align: center; }
+  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 14px; }
+  .bar i { display: block; height: 100%; width: 100%; background: var(--green); transition: width .25s linear, background .3s; }
+  .bar i.low { background: var(--red); }
+  .q { font-size: 21px; font-weight: 700; line-height: 1.35; margin: 4px 0 4px; }
+  .qtr { font-size: 15px; color: var(--muted); margin: 0 0 8px; }
+  .opts { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .opt { text-align: left; background: var(--panel); border: 2px solid var(--line); color: var(--ink); border-radius: 14px; padding: 14px; font: inherit; font-size: 17px; cursor: pointer; transition: transform .08s; }
+  .opt:active { transform: scale(.98); }
+  .opt.right { border-color: var(--green); background: #12301f; }
+  .opt.wrong { border-color: var(--red); background: #3a1517; }
+  .opt:disabled { cursor: default; }
+  .pop { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); font-size: 44px; font-weight: 900; pointer-events: none; opacity: 0; }
+  .pop.go { animation: pop .7s ease-out; }
+  @keyframes pop { 0% { opacity: 0; transform: translate(-50%, -30%) scale(.6); } 25% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -90%) scale(1); } }
+  .shake { animation: shake .35s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+
+  /* Sonuc */
+  .score { font-size: 64px; font-weight: 900; text-align: center; margin: 4px 0 0; line-height: 1.1; }
+  .grid { font-size: 22px; text-align: center; letter-spacing: 0; margin: 6px 0; white-space: nowrap; overflow: hidden; }
+  .stats { display: flex; justify-content: space-around; text-align: center; }
+  .stats b { display: block; font-size: 24px; }
+  .stats span { font-size: 13px; color: var(--muted); }
+  .review .item { border-top: 1px solid var(--line); padding: 10px 0; font-size: 15px; }
+  .review .item:first-child { border-top: 0; }
+  .review .ok { color: var(--green); margin-top: 4px; }
+  .review .ex { color: var(--muted); margin-top: 4px; }
+  .cta { display: block; text-align: center; background: var(--blue); color: #fff; text-decoration: none; border-radius: 999px; padding: 16px; font-weight: 800; margin-top: 12px; }
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #fff; color: #111; padding: 10px 16px; border-radius: 999px; font-size: 15px; font-weight: 700; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: auto; padding-top: 18px; }
+  footer a { color: #7fb4ff; }
+</style>
+<script data-goatcounter="https://sinavprovasi.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <section class="screen on" id="r-home">
+    <div class="top">
+      <a href="./" class="small" style="text-decoration:none" data-en="← All tests">← Tüm testler</a>
+      <div class="langbar"><button data-lang="en" onclick="setLang('en')">EN</button> <button data-lang="tr" onclick="setLang('tr')">TR</button></div>
+    </div>
+    <h1>SERU <span>Rush</span> 🚕</h1>
+    <p class="muted" data-en="A quick SERU game for London PCO drivers. Questions are in English, like the real test.">Londra PCO sürücüleri için hızlı SERU oyunu. Sorular gerçek sınavdaki gibi İngilizce.</p>
+
+    <button class="mode" id="go-daily">
+      <span class="ico">📅</span>
+      <span><b data-en="Daily challenge">Günün yarışması</b> <span class="muted" id="daily-no"></span><br>
+      <span class="muted" data-en="10 questions, the same for everyone today. Share your score!">10 soru, bugün herkese aynı. Skorunu paylaş!</span><br>
+      <span class="done-tag" id="daily-done" hidden></span></span>
+    </button>
+    <button class="mode" id="go-rush">
+      <span class="ico">⚡</span>
+      <span><b data-en="60-second Rush">60 saniye Rush</b><br>
+      <span class="muted" data-en="Answer as many as you can. 3 in a row = double points. Wrong = −3 s.">Yapabildiğin kadar cevapla. Üst üste 3 doğru = çift puan. Yanlış = −3 sn.</span><br>
+      <span class="done-tag" id="rush-best" hidden></span></span>
+    </button>
+
+    <footer>
+      <p><a href="./?ref=rush" data-en="Full SERU mock tests, map and English practice →">Tam SERU deneme sınavı, harita ve İngilizce provası →</a></p>
+      <p data-en="Not affiliated with TfL. © 2026 Private Hire Test London. All rights reserved.">TfL ile bağlantılı değildir. © 2026 Private Hire Test London. Tüm hakları saklıdır.</p>
+    </footer>
+  </section>
+
+  <section class="screen" id="r-play">
+    <div class="hud"><span id="h-left"></span><span class="streak" id="h-streak"></span><span id="h-score"></span></div>
+    <div class="bar"><i id="h-bar"></i></div>
+    <div class="q" id="p-q"></div>
+    <p class="qtr" id="p-tr" hidden></p>
+    <div class="opts" id="p-opts"></div>
+  </section>
+
+  <section class="screen" id="r-end">
+    <p class="muted" style="text-align:center;margin-bottom:0" id="e-title"></p>
+    <div class="score" id="e-score"></div>
+    <div class="grid" id="e-grid"></div>
+    <div class="card stats" id="e-stats"></div>
+    <button class="big green" id="e-share" data-en="📤 Share my score">📤 Skorumu paylaş</button>
+    <button class="big amber" id="e-again"></button>
+    <a class="cta" href="./?ref=rush" data-en="Practise the full SERU mock test →">Tam SERU deneme sınavına geç →</a>
+    <div class="card review" id="e-review" hidden></div>
+    <button class="small" style="margin-top:12px;align-self:center" id="e-home" data-en="← Menu">← Menü</button>
+  </section>
+
+  <div class="pop" id="pop"></div>
+  <div class="toast" id="toast"></div>
+</div>
+<script>applyLang();</script>
+<script src="seru-data.js"></script>
+<script src="seru-data-2.js"></script>
+<script>
+// SERU Rush: gunluk yarisma (herkese ayni 10 soru, tarih tohumlu) ve 60 sn hiz modu.
+// Dogru cevap her zaman x.o[0]; siklar ekranda karistirilir. Okuma sorulari (t:"read") uzun oldugu icin oyunda yok.
+(() => {
+  const $ = id => document.getElementById(id);
+  const POOL = (window.SERU || []).filter(x => (x.t || "mcq") !== "read");
+  const URL_GAME = "https://gulyiyen.github.io/sinav-provasi/rush.html";
+  const DAILY_N = 10, RUSH_SECS = 60, PENALTY = 3, START = Date.UTC(2026, 9, 23);  // Daily #1 = 23 Eki 2026 (yayin gunu)
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+  };
+  const track = (path) => { try { window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: "rush/" + path, title: path, event: true }); } catch (_) {} };
+
+  // Londra tarihi: gunluk soru seti herkes icin gece yarisi (Londra) degisir
+  function londonDay() {
+    const p = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+    const g = t => p.find(x => x.type === t).value;
+    return `${g("year")}-${g("month")}-${g("day")}`;
+  }
+  const dayNo = d => Math.round((Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8)) - START) / 86400000) + 1;
+  function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function shuffle(a, r = Math.random) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; }
+
+  function show(id) { document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id)); scrollTo(0, 0); }
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.id); toast.id = setTimeout(() => t.classList.remove("on"), 1800); }
+  function pop(txt, color) { const p = $("pop"); p.textContent = txt; p.style.color = color; p.classList.remove("go"); void p.offsetWidth; p.classList.add("go"); }
+
+  let mode, qs, idx, results, score, streak, t0, deadline, tick, locked;
+
+  function start(m) {
+    mode = m; idx = 0; results = []; score = 0; streak = 0; locked = false;
+    if (m === "daily") {
+      const d = londonDay();
+      const r = rng(hash("seru-daily-" + d));
+      qs = shuffle(POOL, r).slice(0, DAILY_N).map(x => ({ x, opts: shuffle(x.o, r) }));
+    } else {
+      // Rush: bu telefonda yakinda gorulmeyenler once gelir
+      const seen = store.get("rush-seen", []);
+      const fresh = POOL.filter(x => !seen.includes(x.q));
+      qs = shuffle(fresh.length >= 40 ? fresh : POOL).concat(shuffle(POOL)).map(x => ({ x, opts: shuffle(x.o) }));
+      deadline = Date.now() + RUSH_SECS * 1000;
+    }
+    t0 = Date.now();
+    track(m + "-start");
+    show("r-play");
+    clearInterval(tick); tick = setInterval(hud, 200);
+    render();
+  }
+
+  function hud() {
+    if (mode === "daily") {
+      const s = Math.floor((Date.now() - t0) / 1000);
+      $("h-left").textContent = `${idx + 1 > DAILY_N ? DAILY_N : idx + 1}/${DAILY_N}`;
+      $("h-score").textContent = `⏱ ${s}s`;
+      $("h-bar").style.width = (idx / DAILY_N * 100) + "%";
+      $("h-bar").classList.remove("low");
+    } else {
+      const left = Math.max(0, (deadline - Date.now()) / 1000);
+      $("h-left").textContent = `⏱ ${Math.ceil(left)}`;
+      $("h-score").textContent = `★ ${score}`;
+      $("h-bar").style.width = (left / RUSH_SECS * 100) + "%";
+      $("h-bar").classList.toggle("low", left <= 10);
+      if (left <= 0 && !locked) finish();
+    }
+    $("h-streak").textContent = streak >= 3 ? `🔥 x2` : streak >= 2 ? `🔥 ${streak}` : "";
+  }
+
+  function render() {
+    const { x, opts } = qs[idx];
+    $("p-q").textContent = x.q;
+    const trOn = window.LANG === "tr" && x.tr;
+    $("p-tr").hidden = !trOn; if (trOn) $("p-tr").textContent = x.tr;
+    const box = $("p-opts"); box.innerHTML = "";
+    opts.forEach(o => {
+      const b = document.createElement("button");
+      b.className = "opt"; b.textContent = o;
+      b.onclick = () => answer(o, b);
+      box.append(b);
+    });
+    hud();
+  }
+
+  function answer(o, btn) {
+    if (locked) return;
+    locked = true;
+    const { x } = qs[idx];
+    const right = o === x.o[0];
+    results.push({ x, pick: o, right });
+    document.querySelectorAll("#p-opts .opt").forEach(b => { b.disabled = true; if (b.textContent === x.o[0]) b.classList.add("right"); });
+    if (right) {
+      streak++;
+      const pts = mode === "rush" && streak >= 3 ? 2 : 1;
+      score += pts;
+      pop(pts === 2 ? "+2 🔥" : "+1", "#1fb36b");
+    } else {
+      streak = 0;
+      btn.classList.add("wrong");
+      $("p-opts").classList.remove("shake"); void $("p-opts").offsetWidth; $("p-opts").classList.add("shake");
+      if (navigator.vibrate) navigator.vibrate(120);
+      if (mode === "rush") { deadline -= PENALTY * 1000; pop(`−${PENALTY}s`, "#e5484d"); }
+    }
+    hud();
+    // Yanlista dogru cevabi okumaya biraz daha zaman
+    setTimeout(next, right ? 550 : 1300);
+  }
+
+  function next() {
+    idx++;
+    locked = false;
+    if (mode === "daily" && idx >= DAILY_N) return finish();
+    if (mode === "rush" && Date.now() >= deadline) return finish();
+    render();
+  }
+
+  function finish() {
+    locked = true;
+    clearInterval(tick);
+    const secs = Math.round((Date.now() - t0) / 1000);
+    const correct = results.filter(r => r.right).length;
+    const grid = results.map(r => r.right ? "🟩" : "🟥").join("");
+    let share, isBest = false;
+
+    if (mode === "daily") {
+      const d = londonDay(), n = dayNo(d);
+      const prev = store.get("rush-daily", {});
+      const replay = !!prev[d];
+      if (!replay) { prev[d] = { correct, secs, grid }; store.set("rush-daily", prev); }
+      const rec = prev[d];  // ayni gun ikinci oyun sayilmaz: paylasilan hep ilk sonuc
+      $("e-title").textContent = T(`Günün yarışması #${n}`, `Daily challenge #${n}`) + (replay ? T(" · ilk denemen sayıldı", " · your first try counts") : "");
+      $("e-score").textContent = `${rec.correct}/${DAILY_N}`;
+      $("e-grid").textContent = rec.grid;
+      $("e-stats").innerHTML = `<div><b>${rec.secs}s</b><span>${T("süre", "time")}</span></div><div><b>${streakDays()}</b><span>${T("gün serisi", "day streak")}</span></div>`;
+      $("e-again").textContent = T("⚡ 60 saniye Rush oyna", "⚡ Play 60-second Rush");
+      $("e-again").onclick = () => start("rush");
+      share = `🚕 SERU Daily #${n}: ${rec.correct}/${DAILY_N} in ${rec.secs}s\n${rec.grid}\nCan you beat me? 👇\n${URL_GAME}?ref=share-daily`;
+    } else {
+      const best = store.get("rush-best", 0);
+      isBest = score > best;
+      if (isBest) store.set("rush-best", score);
+      const seen = store.get("rush-seen", []).concat(results.map(r => r.x.q)).slice(-150);
+      store.set("rush-seen", seen);
+      const answered = results.length;
+      $("e-title").textContent = isBest && best > 0 ? T("🏆 Yeni rekor!", "🏆 New personal best!") : T("60 saniye Rush", "60-second Rush");
+      $("e-score").textContent = `★ ${score}`;
+      $("e-grid").textContent = grid.length > 20 ? grid.slice(0, 40) + "…" : grid;
+      $("e-stats").innerHTML = `<div><b>${correct}/${answered}</b><span>${T("doğru", "correct")}</span></div><div><b>${Math.max(score, best)}</b><span>${T("rekorun", "your best")}</span></div>`;
+      $("e-again").textContent = T("🔁 Tekrar oyna", "🔁 Play again");
+      $("e-again").onclick = () => start("rush");
+      share = `⚡ I scored ${score} in SERU Rush (60s, ${correct}/${answered} correct)\nCan you beat me? 👇\n${URL_GAME}?ref=share-rush`;
+    }
+
+    // Yanlislar: dogru cevap + aciklama (ogrenme kismi)
+    const wrong = results.filter(r => !r.right);
+    const rv = $("e-review");
+    rv.hidden = !wrong.length;
+    rv.innerHTML = wrong.length ? `<b>${T("Yanlış cevapladıkların", "What you got wrong")}</b>` : "";
+    wrong.forEach(({ x, pick }) => {
+      const it = document.createElement("div"); it.className = "item";
+      const q = document.createElement("div"); q.textContent = x.q;
+      const ok = document.createElement("div"); ok.className = "ok"; ok.textContent = "✓ " + x.o[0];
+      const ex = document.createElement("div"); ex.className = "ex"; ex.textContent = T(x.e, x.ee || x.e);
+      it.append(q, ok, ex); rv.append(it);
+    });
+
+    $("e-share").onclick = async () => {
+      track(mode + "-share");
+      try { if (navigator.share) { await navigator.share({ text: share }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+      try { await navigator.clipboard.writeText(share); toast(T("Kopyalandı – grupta paylaş!", "Copied – paste it in the group!")); }
+      catch (_) { prompt(T("Kopyala:", "Copy:"), share); }
+    };
+    track(mode + "-finish");
+    show("r-end");
+    menu();
+  }
+
+  // Ust uste kac gun gunluk yarisma oynandi (bugun dahil)
+  function streakDays() {
+    const done = store.get("rush-daily", {});
+    let n = 0, t = Date.UTC(+londonDay().slice(0, 4), +londonDay().slice(5, 7) - 1, +londonDay().slice(8));
+    while (done[new Date(t).toISOString().slice(0, 10)]) { n++; t -= 86400000; }
+    return n;
+  }
+
+  function menu() {
+    const d = londonDay(), rec = store.get("rush-daily", {})[d];
+    $("daily-no").textContent = "#" + dayNo(d);
+    $("daily-done").hidden = !rec;
+    if (rec) $("daily-done").textContent = T(`✓ Bugün: ${rec.correct}/${DAILY_N}, ${rec.secs} sn – yarın yeni sorular`, `✓ Today: ${rec.correct}/${DAILY_N} in ${rec.secs}s – new questions tomorrow`);
+    const best = store.get("rush-best", 0);
+    $("rush-best").hidden = !best;
+    if (best) $("rush-best").textContent = T(`🏆 Rekorun: ${best}`, `🏆 Your best: ${best}`);
+  }
+
+  $("go-daily").onclick = () => start("daily");
+  $("go-rush").onclick = () => start("rush");
+  $("e-home").onclick = () => { menu(); show("r-home"); };
+  menu();
+})();
+</script>
+</body>
+</html>
